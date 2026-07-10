@@ -1,5 +1,4 @@
 import { GraphQLObjectType, GraphQLFieldConfig } from "graphql";
-
 import { abi_bin_to_json } from "./blockchain/abi_bin_to_json.js";
 import { get_abi } from "./blockchain/get_abi.js";
 import { get_account } from "./blockchain/get_account.js";
@@ -9,7 +8,6 @@ import { currency_balance as get_currency_balance } from "./blockchain/get_curre
 import { get_currency_stats } from "./blockchain/get_currency_stats.js";
 import { info as get_info } from "./blockchain/get_info.js";
 import { get_producers } from "./blockchain/get_producers.js";
-import { get_ram_price } from "./blockchain/get_ram_price.js";
 import { get_required_keys } from "./blockchain/get_required_keys.js";
 import { get_smart_contract } from "./blockchain/get_smart_contract.js";
 import { get_table } from "./blockchain/get_table_by_scope.js";
@@ -30,7 +28,6 @@ export const blockchain_query_field: GraphQLFieldConfig<any, any> = {
       get_info,
       get_producers,
       get_table,
-      get_ram_price,
       abi_bin_to_json
     }
   }),
