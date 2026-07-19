@@ -1,4 +1,4 @@
-import { ok } from "assert";
+import { deepStrictEqual, equal } from "assert";
 
 import { serialize_abi } from "../src/serialize_abi.js";
 
@@ -12,8 +12,71 @@ describe("Serialize ABI test", () => {
     );
 
     const serialized_abi =
-      "0e656f73696f3a3a6162692f312e320002066175746f6277000005757365727300010c6163636f756e745f6e616d65046e616d650100000000f043b336066175746f6277000100000000007c15d603693634000005757365727300000000";
+      "0e656f73696f3a3a6162692f312e320002066175746f6277000005757365727300010c6163636f756e745f6e616d65046e616d650100000000f043b336066175746f6277000100000000007c15d60369363400000575736572730000000000";
 
-    ok(serialized_abi == (await serialize_abi(abi)));
+    equal(await serialize_abi(abi), serialized_abi);
+  });
+
+  it("preserves absence of optional ABI 1.1 trailing fields", async () => {
+    const withoutActionResults = {
+      version: "eosio::abi/1.1",
+      types: [],
+      structs: [],
+      actions: [],
+      tables: [],
+      ricardian_clauses: [],
+      error_messages: [],
+      abi_extensions: []
+    };
+
+    const withEmptyVariants = {
+      ...withoutActionResults,
+      variants: []
+    };
+
+    equal(
+      (await serialize_abi(withEmptyVariants)).length,
+      (await serialize_abi(withoutActionResults)).length + 2
+    );
+  });
+
+  it("serializes non-empty ABI 1.2 action results", async () => {
+    const abi = {
+      version: "eosio::abi/1.2",
+      types: [],
+      structs: [],
+      actions: [],
+      tables: [],
+      ricardian_clauses: [],
+      error_messages: [],
+      abi_extensions: [],
+      variants: [],
+      action_results: [{ name: "calculate", result_type: "uint64" }]
+    };
+
+    const serialized = await serialize_abi(abi);
+    equal(serialized.slice(-32), "01000050d9448da2410675696e743634");
+  });
+
+  it("normalizes tuple-shaped ABI extensions returned by nodeos", async () => {
+    const base = {
+      version: "eosio::abi/1.2",
+      types: [],
+      structs: [],
+      actions: [],
+      tables: [],
+      ricardian_clauses: [],
+      error_messages: [],
+      variants: [],
+      action_results: []
+    };
+
+    deepStrictEqual(
+      await serialize_abi({ ...base, abi_extensions: [[7, "aabb"]] }),
+      await serialize_abi({
+        ...base,
+        abi_extensions: [{ tag: 7, value: "aabb" }]
+      })
+    );
   });
 });

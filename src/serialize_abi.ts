@@ -50,10 +50,17 @@ interface AbiVariantDef {
   types: string[];
 }
 
+interface AbiActionResultDef {
+  name: string;
+  result_type: string;
+}
+
 interface AbiExtensionsEntry {
   tag: number;
   value: string;
 }
+
+type AbiExtensionsInput = AbiExtensionsEntry | [number, string];
 
 interface AbiDef {
   version: string;
@@ -63,8 +70,9 @@ interface AbiDef {
   tables: AbiTableDef[];
   ricardian_clauses: AbiClausePair[];
   error_messages: AbiErrorMessage[];
-  abi_extensions: AbiExtensionsEntry[];
+  abi_extensions: AbiExtensionsInput[];
   variants: AbiVariantDef[];
+  action_results: AbiActionResultDef[];
 }
 
 // Instruction and AST types for serialization
@@ -168,6 +176,14 @@ const ABI: { version: string; structs: AbiStruct[] } = {
       ]
     },
     {
+      name: "action_result_def",
+      base: "",
+      fields: [
+        { name: "name", type: "name" },
+        { name: "result_type", type: "string" }
+      ]
+    },
+    {
       name: "abi_def",
       base: "",
       fields: [
@@ -179,7 +195,8 @@ const ABI: { version: string; structs: AbiStruct[] } = {
         { name: "ricardian_clauses", type: "clause_pair[]" },
         { name: "error_messages", type: "error_message[]" },
         { name: "abi_extensions", type: "extensions_entry[]" },
-        { name: "variants", type: "variant_def[]" }
+        { name: "variants", type: "variant_def[]$" },
+        { name: "action_results", type: "action_result_def[]$" }
       ]
     }
   ]
@@ -192,12 +209,23 @@ const AST: AST = abi_to_graphql_ast(ABI as ABI);
  * @returns hex string of serialized ABI
  */
 export async function serialize_abi(abi: Partial<AbiDef>): Promise<string> {
-  let JSON_ABI = { ...abi };
+  const JSON_ABI: Record<string, any> = {
+    ...abi,
+    abi_extensions: (abi.abi_extensions ?? []).map((extension) =>
+      Array.isArray(extension)
+        ? { tag: extension[0], value: extension[1] }
+        : extension
+    )
+  };
 
-  // Ensure array fields exist on ABI.structs[9] (abi_def fields)
-  ABI.structs[9].fields.forEach(({ name }) => {
-    if (JSON_ABI[name as keyof AbiDef] === undefined) {
-      (JSON_ABI as any)[name] = [];
+  const abiDef = ABI.structs.find(({ name }) => name === "abi_def");
+  if (!abiDef) throw new Error("The ABI serializer schema is missing abi_def.");
+
+  // Required vectors default to empty. Trailing binary-extension vectors must
+  // remain absent when nodeos did not return them.
+  abiDef.fields.forEach(({ name, type }) => {
+    if (!type.endsWith("$") && JSON_ABI[name] === undefined) {
+      JSON_ABI[name] = [];
     }
   });
 
@@ -223,9 +251,7 @@ export async function serialize_abi(abi: Partial<AbiDef>): Promise<string> {
         });
       }
 
-      if ($info.binary_ex) $info.optional = false;
-
-      if ($info.optional)
+      if ($info.optional && !$info.binary_ex)
         serialize_list.push({ type: "bool", value: datum !== undefined });
 
       if ($info.list && datum !== undefined)
@@ -233,7 +259,7 @@ export async function serialize_abi(abi: Partial<AbiDef>): Promise<string> {
 
       if (next_instruction) {
         if ($info.list) {
-          if (datum !== undefined && !$info.binary_ex) {
+          if (datum !== undefined) {
             for await (const d of datum) {
               serialize_list.push(
                 ...(await build_serialize_list(await d, next_instruction))
