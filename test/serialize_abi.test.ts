@@ -1,4 +1,5 @@
-import { deepStrictEqual, equal } from "assert";
+import { deepStrictEqual, equal, rejects } from "assert";
+import { Serialize } from "eosjs";
 
 import { serialize_abi } from "../src/serialize_abi.js";
 
@@ -77,6 +78,77 @@ describe("Serialize ABI test", () => {
         ...base,
         abi_extensions: [{ tag: 7, value: "aabb" }]
       })
+    );
+  });
+
+  it("preserves Markdown newlines and UTF-8 in Ricardian clauses", async () => {
+    const body = "---\nschema: relocke.ui/1\n---\nภาษาไทย 🌴";
+    const abi = {
+      version: "eosio::abi/1.2",
+      types: [],
+      structs: [],
+      actions: [],
+      tables: [],
+      ricardian_clauses: [{ id: "ui.contract", body }],
+      error_messages: [],
+      abi_extensions: [],
+      variants: [],
+      action_results: []
+    };
+
+    const serialized = await serialize_abi(abi);
+    const buffer = new Serialize.SerialBuffer({
+      textEncoder: new TextEncoder(),
+      textDecoder: new TextDecoder(),
+      array: Serialize.hexToUint8Array(serialized)
+    });
+    const abiType = Serialize.getTypesFromAbi(Serialize.createAbiTypes()).get(
+      "abi_def"
+    );
+    if (!abiType) throw new Error("EOSJS did not provide abi_def.");
+    const decoded = abiType.deserialize(buffer);
+
+    deepStrictEqual(decoded.ricardian_clauses, abi.ricardian_clauses);
+    equal(buffer.haveReadData(), false);
+  });
+
+  it("serializes the ui.contract clause with its newline bytes", async () => {
+    const serialized = await serialize_abi({
+      version: "eosio::abi/1.2",
+      types: [],
+      structs: [],
+      actions: [],
+      tables: [],
+      ricardian_clauses: [
+        {
+          id: "ui.contract",
+          body: "---\nschema: relocke.ui/1\n---\nkool"
+        }
+      ],
+      error_messages: [],
+      abi_extensions: [],
+      variants: [],
+      action_results: []
+    });
+
+    equal(serialized.includes("2d2d2d0a736368656d61"), true);
+    equal(serialized.includes("2f310a2d2d2d0a6b6f6f6c"), true);
+  });
+
+  it("rejects a later ABI extension after an earlier one is omitted", async () => {
+    await rejects(
+      serialize_abi({
+        version: "eosio::abi/1.2",
+        types: [],
+        structs: [],
+        actions: [],
+        tables: [],
+        ricardian_clauses: [],
+        error_messages: [],
+        abi_extensions: [],
+        action_results: []
+      }),
+      /unexpected abi_def\.action_results/
     );
   });
 });

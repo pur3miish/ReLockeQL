@@ -1,6 +1,6 @@
 {
   "name": "relockeql",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A GraphQL implementation for interacting with Relocke based blockchains.",
   "repository": {
     "type": "git",
@@ -29,7 +29,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "changelog.md"
   ],
   "exports": {
     ".": {
@@ -82,6 +83,7 @@
   "dependencies": {
     "base58-js": "^3.0.3",
     "eosio-wasm-js": "^5.0.2",
+    "eosjs": "^22.1.0",
     "ripemd160-js": "^3.0.4"
   },
   "peerDependencies": {

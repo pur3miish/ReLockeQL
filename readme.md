@@ -28,6 +28,29 @@ npm install relockeql graphql
 
 See the examples folder on how to run RelockeQL as a [Node.js](https://nodejs.org) endpoint.
 
+### Serialize a contract ABI
+
+`serialize_abi` converts an Antelope ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Version 2.0.2 uses EOSJS's canonical `abi_def` serializer, including UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions.
+
+```js
+import { serialize_abi } from "relockeql";
+
+const rawAbi = await serialize_abi({
+  version: "eosio::abi/1.2",
+  types: [],
+  structs: [],
+  actions: [],
+  tables: [],
+  ricardian_clauses: [
+    { id: "ui.contract", body: "---\nschema: relocke.ui/1\n---\nPurpose" }
+  ],
+  error_messages: [],
+  abi_extensions: []
+});
+```
+
+Trailing binary-extension fields remain absent unless supplied. If `action_results` is present, `variants` must also be present because Antelope binary extensions cannot skip an earlier field and then encode a later one.
+
 ### Query a Blockchain Account Info
 
 ```js

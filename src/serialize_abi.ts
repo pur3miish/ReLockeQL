@@ -1,9 +1,4 @@
-// @ts-ignore
-import serialize from "eosio-wasm-js/serialize.js";
-
-import { abi_to_graphql_ast, type ABI } from "./abi_to_graphql_ast.js";
-
-// ABI related types
+import { Serialize } from "eosjs";
 
 interface AbiField {
   name: string;
@@ -22,7 +17,7 @@ interface AbiTypeDef {
 }
 
 interface AbiActionDef {
-  name: string; // actually 'name' type is 'name' in EOSIO, but string is ok here
+  name: string;
   type: string;
   ricardian_contract: string;
 }
@@ -41,7 +36,7 @@ interface AbiClausePair {
 }
 
 interface AbiErrorMessage {
-  error_code: string | number; // uint64 is large, often represented as string
+  error_code: string | number;
   error_msg: string;
 }
 
@@ -62,6 +57,21 @@ interface AbiExtensionsEntry {
 
 type AbiExtensionsInput = AbiExtensionsEntry | [number, string];
 
+interface AbiPrimaryKeyIndexDef {
+  name: string;
+  type: string;
+}
+
+interface AbiSecondaryIndexDef {
+  type: string;
+}
+
+interface AbiKvTableEntryDef {
+  type: string;
+  primary_index: AbiPrimaryKeyIndexDef;
+  secondary_indices: Record<string, AbiSecondaryIndexDef>;
+}
+
 interface AbiDef {
   version: string;
   types: AbiTypeDef[];
@@ -71,145 +81,23 @@ interface AbiDef {
   ricardian_clauses: AbiClausePair[];
   error_messages: AbiErrorMessage[];
   abi_extensions: AbiExtensionsInput[];
-  variants: AbiVariantDef[];
-  action_results: AbiActionResultDef[];
+  variants?: AbiVariantDef[];
+  action_results?: AbiActionResultDef[];
+  kv_tables?: Record<string, AbiKvTableEntryDef>;
 }
 
-// Instruction and AST types for serialization
+const REQUIRED_ABI_ARRAY_FIELDS = [
+  "types",
+  "structs",
+  "actions",
+  "tables",
+  "ricardian_clauses",
+  "error_messages",
+  "abi_extensions"
+] as const;
 
-interface InstructionInfo {
-  variant: boolean;
-  binary_ex: boolean;
-  optional: boolean;
-  list: boolean;
-}
-
-interface SerializeInstruction {
-  $info: InstructionInfo;
-  name: string;
-  type: string;
-}
-
-interface AST {
-  [typeName: string]: SerializeInstruction[];
-}
-
-// The ABI constant, strongly typed
-const ABI: { version: string; structs: AbiStruct[] } = {
-  version: "eosio::abi/1.1",
-  structs: [
-    {
-      name: "extensions_entry",
-      base: "",
-      fields: [
-        { name: "tag", type: "uint16" },
-        { name: "value", type: "bytes" }
-      ]
-    },
-    {
-      name: "type_def",
-      base: "",
-      fields: [
-        { name: "new_type_name", type: "string" },
-        { name: "type", type: "string" }
-      ]
-    },
-    {
-      name: "field_def",
-      base: "",
-      fields: [
-        { name: "name", type: "string" },
-        { name: "type", type: "string" }
-      ]
-    },
-    {
-      name: "struct_def",
-      base: "",
-      fields: [
-        { name: "name", type: "string" },
-        { name: "base", type: "string" },
-        { name: "fields", type: "field_def[]" }
-      ]
-    },
-    {
-      name: "action_def",
-      base: "",
-      fields: [
-        { name: "name", type: "name" },
-        { name: "type", type: "string" },
-        { name: "ricardian_contract", type: "string" }
-      ]
-    },
-    {
-      name: "table_def",
-      base: "",
-      fields: [
-        { name: "name", type: "name" },
-        { name: "index_type", type: "string" },
-        { name: "key_names", type: "string[]" },
-        { name: "key_types", type: "string[]" },
-        { name: "type", type: "string" }
-      ]
-    },
-    {
-      name: "clause_pair",
-      base: "",
-      fields: [
-        { name: "id", type: "string" },
-        { name: "body", type: "string" }
-      ]
-    },
-    {
-      name: "error_message",
-      base: "",
-      fields: [
-        { name: "error_code", type: "uint64" },
-        { name: "error_msg", type: "string" }
-      ]
-    },
-    {
-      name: "variant_def",
-      base: "",
-      fields: [
-        { name: "name", type: "string" },
-        { name: "types", type: "string[]" }
-      ]
-    },
-    {
-      name: "action_result_def",
-      base: "",
-      fields: [
-        { name: "name", type: "name" },
-        { name: "result_type", type: "string" }
-      ]
-    },
-    {
-      name: "abi_def",
-      base: "",
-      fields: [
-        { name: "version", type: "string" },
-        { name: "types", type: "type_def[]" },
-        { name: "structs", type: "struct_def[]" },
-        { name: "actions", type: "action_def[]" },
-        { name: "tables", type: "table_def[]" },
-        { name: "ricardian_clauses", type: "clause_pair[]" },
-        { name: "error_messages", type: "error_message[]" },
-        { name: "abi_extensions", type: "extensions_entry[]" },
-        { name: "variants", type: "variant_def[]$" },
-        { name: "action_results", type: "action_result_def[]$" }
-      ]
-    }
-  ]
-};
-
-const AST: AST = abi_to_graphql_ast(ABI as ABI);
-
-/**
- * @param abi - Relocke ABI object to serialize
- * @returns hex string of serialized ABI
- */
-export async function serialize_abi(abi: Partial<AbiDef>): Promise<string> {
-  const JSON_ABI: Record<string, any> = {
+function normalizeAbi(abi: Partial<AbiDef>): Record<string, unknown> {
+  const normalized: Record<string, unknown> = {
     ...abi,
     abi_extensions: (abi.abi_extensions ?? []).map((extension) =>
       Array.isArray(extension)
@@ -218,73 +106,63 @@ export async function serialize_abi(abi: Partial<AbiDef>): Promise<string> {
     )
   };
 
-  const abiDef = ABI.structs.find(({ name }) => name === "abi_def");
-  if (!abiDef) throw new Error("The ABI serializer schema is missing abi_def.");
+  for (const field of REQUIRED_ABI_ARRAY_FIELDS) {
+    normalized[field] ??= [];
+  }
 
-  // Required vectors default to empty. Trailing binary-extension vectors must
-  // remain absent when nodeos did not return them.
-  abiDef.fields.forEach(({ name, type }) => {
-    if (!type.endsWith("$") && JSON_ABI[name] === undefined) {
-      JSON_ABI[name] = [];
-    }
+  return normalized;
+}
+
+function createAbiType(): Serialize.Type {
+  const abiType = Serialize.getTypesFromAbi(Serialize.createAbiTypes()).get(
+    "abi_def"
+  );
+
+  if (!abiType)
+    throw new Error("EOSJS did not provide its abi_def serializer.");
+  return abiType;
+}
+
+/**
+ * Serializes Antelope abi_def with EOSJS's SerialBuffer and ABI type graph.
+ * This preserves UTF-8 string bytes and enforces the ordered trailing binary
+ * extensions used by ABI 1.1 and 1.2.
+ *
+ * @param abi - Relocke ABI object to serialize
+ * @returns hex string of serialized ABI
+ */
+export async function serialize_abi(abi: Partial<AbiDef>): Promise<string> {
+  const normalizedAbi = normalizeAbi(abi);
+  const version = normalizedAbi.version;
+  if (typeof version !== "string" || !Serialize.supportedAbiVersion(version)) {
+    throw new Error(`Unsupported ABI version: ${String(version)}`);
+  }
+
+  const abiType = createAbiType();
+  const buffer = new Serialize.SerialBuffer({
+    textEncoder: new TextEncoder(),
+    textDecoder: new TextDecoder()
   });
+  abiType.serialize(buffer, normalizedAbi);
+  const rawAbi = buffer.asUint8Array();
 
-  const build_serialize_list = async (
-    data: Record<string, any>,
-    instructions: SerializeInstruction[]
-  ): Promise<Array<{ type: string; value: any }>> => {
-    const serialize_list: Array<{ type: string; value: any }> = [];
+  // Do not return bytes unless EOSJS can decode the complete abi_def and the
+  // Ricardian clauses survive the round trip exactly.
+  const verificationBuffer = new Serialize.SerialBuffer({
+    textEncoder: new TextEncoder(),
+    textDecoder: new TextDecoder(),
+    array: rawAbi
+  });
+  const decoded = abiType.deserialize(verificationBuffer) as Partial<AbiDef>;
+  if (verificationBuffer.haveReadData()) {
+    throw new Error("EOSJS did not consume the complete serialized ABI.");
+  }
+  if (
+    JSON.stringify(decoded.ricardian_clauses ?? []) !==
+    JSON.stringify(normalizedAbi.ricardian_clauses ?? [])
+  ) {
+    throw new Error("EOSJS did not round-trip the Ricardian clauses exactly.");
+  }
 
-    for (const instruction of instructions) {
-      const { $info, name, type } = instruction;
-      const datum = data[name];
-
-      const next_instruction = AST[type];
-
-      if ($info.variant) {
-        if (Object.keys(data).length > 1)
-          throw new Error(`Must only include one type for variant.`);
-        if (!datum) continue;
-        serialize_list.push({
-          type: "varuint32",
-          value: instructions.findIndex((i) => i.type === type)
-        });
-      }
-
-      if ($info.optional && !$info.binary_ex)
-        serialize_list.push({ type: "bool", value: datum !== undefined });
-
-      if ($info.list && datum !== undefined)
-        serialize_list.push({ type: "varuint32", value: datum.length });
-
-      if (next_instruction) {
-        if ($info.list) {
-          if (datum !== undefined) {
-            for await (const d of datum) {
-              serialize_list.push(
-                ...(await build_serialize_list(await d, next_instruction))
-              );
-            }
-          }
-        } else {
-          serialize_list.push(
-            ...(await build_serialize_list(datum, next_instruction))
-          );
-        }
-      } else if ($info.list && datum !== undefined) {
-        for await (const d of datum) serialize_list.push({ type, value: d });
-      } else if (datum !== undefined) {
-        serialize_list.push({ type, value: datum });
-      }
-    }
-
-    return serialize_list;
-  };
-
-  const ser_list = await build_serialize_list(JSON_ABI, AST.abi_def);
-
-  let hex_string = "";
-  ser_list.forEach(({ type, value }) => (hex_string += serialize[type](value)));
-
-  return hex_string;
+  return Serialize.arrayToHex(rawAbi).toLowerCase();
 }
