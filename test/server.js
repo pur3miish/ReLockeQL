@@ -24,7 +24,8 @@ const server = http.createServer((req, res) => {
         },
         {
           contracts: {
-            jungle: ["eosio.token"]
+            vaulta: ["eosio.token", "eosio", "core.vaulta"],
+            jungle: ["eosio.token", "eosio"]
           },
           chains: {
             pungle: "https://jungle.relocke.io",

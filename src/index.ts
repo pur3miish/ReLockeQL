@@ -18,7 +18,7 @@ export {
 } from "./send_transaction_rpc.js";
 export { send_serialized_transaction } from "./send_serialized_transaction.js";
 
-export { query_resolver } from "./query_resolver.js";
+export { query_resolver, type TableQueryResult } from "./query_resolver.js";
 export { mutation_resolver } from "./mutation_resolver.js";
 
 export { get_abis, type AbiResponse } from "./get_abis.js";

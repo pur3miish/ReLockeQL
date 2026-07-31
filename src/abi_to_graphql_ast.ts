@@ -1,8 +1,10 @@
 import {
+  GraphQLBoolean,
   GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
+  GraphQLString,
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLInputFieldConfigMap,
@@ -272,13 +274,29 @@ export function get_graphql_fields_from_AST(
     };
 
     if (!queryTypes[table_type]) {
+      const row_type = new GraphQLObjectType({
+        name: gql_account_name + table_type + "_query" + chainName,
+        fields: buildQGL(table_fields)
+      });
+
       queryTypes[table_type] = {
-        type: new GraphQLList(
-          new GraphQLObjectType({
-            name: gql_account_name + table_type + "_query" + chainName,
-            fields: buildQGL(table_fields)
-          })
-        ),
+        type: new GraphQLObjectType({
+          name: gql_account_name + table_type + "_query_page" + chainName,
+          fields: {
+            rows: {
+              type: new GraphQLList(row_type),
+              description: "Rows returned from the contract table."
+            },
+            more: {
+              type: GraphQLBoolean,
+              description: "Whether more rows are available."
+            },
+            next_key: {
+              type: GraphQLString,
+              description: "Key to use as the next lower bound."
+            }
+          }
+        }),
         args: {
           arg: {
             // @ts-ignore

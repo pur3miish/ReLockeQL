@@ -80,6 +80,44 @@ console.log(data);
 
 > Logged output included an account infomation.
 
+### Query a Contract Table
+
+Contract table fields return the table rows together with the blockchain pagination metadata.
+
+```js
+const query = /* GraphQL */ `
+  {
+    vaulta {
+      eosio {
+        powup_order(arg: { scope: "" }) {
+          rows {
+            id
+            owner
+            cpu_weight
+            net_weight
+          }
+          more
+          next_key
+        }
+      }
+    }
+  }
+`;
+
+const { data } = await RelockeQL({
+  query,
+  contracts: {
+    vaulta: ["eosio"]
+  }
+});
+
+const page = data.vaulta.eosio.powup_order;
+
+if (page.more) {
+  console.log("Next lower bound:", page.next_key);
+}
+```
+
 ### Transfer Tokens
 
 ```js

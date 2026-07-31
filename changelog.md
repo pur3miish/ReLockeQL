@@ -1,5 +1,16 @@
 # RelockeQL changelog
 
+## 3.0.0
+
+### Breaking
+
+- Contract table fields now return an object containing `rows`, `more`, and `next_key`. For example, `powup_order { ... }` is now queried as `powup_order { rows { ... } more next_key }`.
+- Remove the legacy contract table shape that returned rows directly and discarded the blockchain pagination metadata.
+
+### Fixed
+
+- Apply the contract table argument defaults when `arg` is omitted instead of failing while reading `key_type`.
+
 ## 2.0.2
 
 ### Fixed

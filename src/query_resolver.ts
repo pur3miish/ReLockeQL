@@ -16,25 +16,42 @@ interface Root {
 
 /** Args object received by resolver */
 interface Args {
-  arg: QueryArg;
+  arg?: QueryArg;
+}
+
+export interface TableQueryResult {
+  rows: any[];
+  more: boolean;
+  next_key: string;
+}
+
+interface TableQueryResponse extends TableQueryResult {
+  error?: unknown;
+  message?: string;
 }
 
 /**
  * RelockeQL Query resolver.
  * @param root GraphQL resolver root query
  * @param args Query arguments object
- * @param getContext Function returning the context object
+ * @param context RelockeQL request context
  * @param info GraphQL resolver info object
- * @returns Data rows from the queried table
+ * @returns Rows and pagination metadata from the queried table
  */
 export async function query_resolver(
   root: Root,
   args: Args,
   context: Context,
   info: GraphQLResolveInfo
-): Promise<any[]> {
+): Promise<TableQueryResult> {
   const { code } = root;
-  const { arg } = args;
+  const arg: QueryArg = {
+    scope: "",
+    index_position: 1,
+    key_type: "name",
+    encode_type: "dec",
+    ...args.arg
+  };
   const { rpc_url, fetchOptions } = context.network(root, args, info);
 
   const { fieldName: query_name } = info;
@@ -57,11 +74,13 @@ export async function query_resolver(
     body: JSON.stringify({ json: true, code, table, ...arg })
   });
 
-  const data = await response.json();
+  const data = (await response.json()) as TableQueryResponse;
 
   if (data.error) {
-    throw new GraphQLError(data.message, { extensions: data });
+    throw new GraphQLError(data.message || "Unknown error", {
+      extensions: data as unknown as Record<string, unknown>
+    });
   }
 
-  return data.rows;
+  return data;
 }
