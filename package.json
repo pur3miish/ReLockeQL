@@ -74,7 +74,7 @@
   ],
   "dependencies": {
     "base58-js": "^3.0.3",
-    "eosio-wasm-js": "^6.0.0",
+    "eosio-wasm-js": "^6.0.1",
     "ripemd160-js": "^4.0.0"
   },
   "peerDependencies": {

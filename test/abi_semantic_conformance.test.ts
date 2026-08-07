@@ -1,6 +1,6 @@
 import { throws } from "assert";
 
-import { serialize_abi, type AbiDef } from "../src/serialize_abi.js";
+import { type AbiDef, serialize_abi } from "../src/serialize_abi.js";
 
 function baseAbi(): AbiDef {
   return {

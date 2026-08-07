@@ -1,5 +1,7 @@
 import serialize from "eosio-wasm-js/serialize.js";
 
+import { validate_abi } from "./validate_abi.js";
+
 interface AbiField {
   name: string;
   type: string;
@@ -278,6 +280,8 @@ export function serialize_abi(abi: AbiDef): string {
   assert_supported_version(abi.version);
 
   assert_binary_extension_order(abi);
+
+  validate_abi(abi);
 
   let output = serialize_string(abi.version);
 

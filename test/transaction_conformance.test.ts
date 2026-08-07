@@ -2,7 +2,6 @@ import { deepStrictEqual, rejects, strictEqual } from "assert";
 
 import { abi_to_graphql_ast } from "../src/abi_to_graphql_ast.js";
 import { mutation_resolver } from "../src/mutation_resolver.js";
-
 import eosio_token_abi from "./abis/eosio.token.json" with { type: "json" };
 
 const CHAIN_ID =
