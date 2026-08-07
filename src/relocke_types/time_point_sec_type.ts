@@ -1,4 +1,4 @@
-import { GraphQLScalarType, GraphQLError } from "graphql";
+import { GraphQLError, GraphQLScalarType } from "graphql";
 
 export const time_point_sec_type = new GraphQLScalarType({
   name: "time_point_sec",

@@ -1,8 +1,8 @@
 import {
+  GraphQLFieldConfigMap,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLFieldConfigMap
+  GraphQLString
 } from "graphql";
 
 export interface AuthorizingAccount {

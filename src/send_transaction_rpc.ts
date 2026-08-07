@@ -1,4 +1,5 @@
 import { GraphQLError } from "graphql";
+
 import { type NetworkContext } from "./types/Context.js";
 
 export interface SendTransactionArgs {

@@ -1,4 +1,4 @@
-import { deepStrictEqual, ok, rejects, strictEqual, throws } from "assert";
+import { deepStrictEqual, ok, strictEqual, throws } from "assert";
 
 import { asset_type } from "../src/relocke_types/asset_type.js";
 import { block_timestamp_type as block_time_stamp } from "../src/relocke_types/block_timestamp_type.js";
@@ -20,7 +20,7 @@ import { varint32_type as varint32 } from "../src/relocke_types/varint32_type.js
 import { varuint32_type as varuint32 } from "../src/relocke_types/varuint32_type.js";
 
 describe("Relocke types - validating parse values", () => {
-  it("Validate parsed values", async () => {
+  it("Validate parsed values", () => {
     deepStrictEqual(varint32.parseValue(""), "");
     deepStrictEqual(varuint32.parseValue(""), "");
     strictEqual(time_point.parseValue("1616667468"), "1616667468");
@@ -74,13 +74,13 @@ describe("Relocke types - validating parse values", () => {
     throws(() => name.parseValue("NOT A NAME"));
 
     deepStrictEqual(
-      "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-      await public_key.parseValue(
+      public_key.parseValue(
         "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
-      )
+      ),
+      "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
     );
 
-    await rejects(() =>
+    throws(() =>
       public_key.parseValue(
         "NOT_EOS_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW533"
       )

@@ -1,8 +1,7 @@
-// @ts-ignore
 import serialize from "eosio-wasm-js/serialize.js";
-// @ts-ignore
 import serialize_transaction_header from "eosio-wasm-js/transaction_header.js";
 import { GraphQLError } from "graphql";
+
 import { type NetworkContext } from "./types/Context.js";
 
 interface ActionData {
@@ -62,12 +61,6 @@ interface GetInfoResponse {
   head_block_num: number;
 }
 
-interface GetBlockResponse {
-  timestamp: string;
-  block_num: number;
-  ref_block_prefix: number;
-}
-
 const default_config: Required<MutationConfiguration> = {
   blocksBehind: 3,
   expireSeconds: 30,
@@ -84,20 +77,30 @@ const validate_actions = (): never => {
   });
 };
 
-const serialize_value = async (type: string, value: any): Promise<string> => {
-  if (type === "bytes" && value === "") return "00";
+const serialize_value = (type: string, value: any): string => {
+  if (type === "bytes" && value === "") {
+    return "00";
+  }
+
   const serializers = serialize as unknown as Record<
     string,
-    (value: any) => string | Promise<string>
+    (value: any) => string
   >;
-  return serializers[type](await value);
+
+  const serializer = serializers[type];
+
+  if (!serializer) {
+    throw new Error(`Unsupported serialization type: ${type}`);
+  }
+
+  return serializer(value);
 };
 
-async function get_transaction_body(
+function get_transaction_body(
   actions: Array<Record<string, Record<string, any>>>,
   ast_list: ASTList
-): Promise<TransactionBodyResult> {
-  let actions_list_to_serialize: ActionToSerialize[] = [];
+): TransactionBodyResult {
+  const actions_list_to_serialize: ActionToSerialize[] = [];
 
   for (const action of actions) {
     if (Object.values(action).length > 1) validate_actions();
@@ -116,8 +119,8 @@ async function get_transaction_body(
     );
   }
 
-  let _actions: TransactionAction[] = [];
-  let _context_free_actions: TransactionAction[] = [];
+  const _actions: TransactionAction[] = [];
+  const _context_free_actions: TransactionAction[] = [];
   const transaction_extensions = "00";
 
   for (const action of actions_list_to_serialize) {
@@ -127,11 +130,11 @@ async function get_transaction_body(
       data: { authorization, ...data }
     } = action;
 
-    const build_serialize_list = async (
+    const build_serialize_list = (
       data: any,
       instructions: SerializeInstruction[]
-    ): Promise<Array<{ type: string; value: any }>> => {
-      let serialize_list: Array<{ type: string; value: any }> = [];
+    ): Array<{ type: string; value: any }> => {
+      const serialize_list: Array<{ type: string; value: any }> = [];
 
       for (const instruction of instructions) {
         const { $info, name, type } = instruction;
@@ -159,19 +162,19 @@ async function get_transaction_body(
         if (next_instruction) {
           if ($info.list) {
             if (datum !== undefined && !$info.binary_ex) {
-              for await (const d of datum) {
+              for (const d of datum) {
                 serialize_list.push(
-                  ...(await build_serialize_list(await d, next_instruction))
+                  ...build_serialize_list(d, next_instruction)
                 );
               }
             }
           } else {
             serialize_list.push(
-              ...(await build_serialize_list(datum, next_instruction))
+              ...build_serialize_list(datum, next_instruction)
             );
           }
         } else if ($info.list && datum !== undefined) {
-          for await (const d of datum) serialize_list.push({ type, value: d });
+          for (const d of datum) serialize_list.push({ type, value: d });
         } else if (datum !== undefined) {
           serialize_list.push({ type, value: datum });
         }
@@ -180,15 +183,11 @@ async function get_transaction_body(
       return serialize_list;
     };
 
-    const hex_string = await build_serialize_list(
-      data,
-      ast_list[contract][action_name]
-    ).then(async (list) => {
-      let hex_string = "";
-      for await (const { type, value } of list)
-        hex_string += await serialize_value(type, value);
-      return hex_string;
-    });
+    const list = build_serialize_list(data, ast_list[contract][action_name]);
+
+    let hex_string = "";
+    for (const { type, value } of list)
+      hex_string += serialize_value(type, value);
 
     if (authorization?.length)
       _actions.push({
@@ -262,7 +261,7 @@ export async function mutation_resolver(
     );
 
   const { rpc_url, fetchOptions } = network;
-  const { transaction_body, ...transaction_list } = await get_transaction_body(
+  const { transaction_body, ...transaction_list } = get_transaction_body(
     actions,
     ast_list
   );

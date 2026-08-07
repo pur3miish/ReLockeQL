@@ -36,14 +36,14 @@ const server = http.createServer((req, res) => {
 
       // Send the response body after all processing
       res.end(JSON.stringify(data));
-    } catch (error) {
+    } catch {
       // If there is an error, handle it properly (e.g., send a 500 response)
       res.writeHead(500, { "Content-Type": "text/plain" });
       res.end("Error processing request");
     }
   });
 
-  req.on("error", (err) => {
+  req.on("error", () => {
     // Handle request errors (e.g., JSON parsing errors, network errors)
     res.writeHead(400, { "Content-Type": "text/plain" });
     res.end("Invalid request");

@@ -1,4 +1,4 @@
-import { GraphQLScalarType, GraphQLError } from "graphql";
+import { GraphQLError, GraphQLScalarType } from "graphql";
 
 export const symbol_code_type = new GraphQLScalarType({
   name: "symbol_code",

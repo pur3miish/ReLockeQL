@@ -1,4 +1,4 @@
-import { GraphQLScalarType, GraphQLError } from "graphql";
+import { GraphQLError, GraphQLScalarType } from "graphql";
 
 /**
  * Generates a GraphQL scalar Float type of `size`.

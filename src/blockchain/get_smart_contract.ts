@@ -1,9 +1,9 @@
 import {
   GraphQLError,
+  GraphQLFieldConfig,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLFieldConfig
+  GraphQLString
 } from "graphql";
 
 import { name_type } from "../relocke_types/name_type.js";

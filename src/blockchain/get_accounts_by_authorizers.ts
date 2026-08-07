@@ -1,17 +1,17 @@
 import { base58_to_binary, binary_to_base58 } from "base58-js";
 import {
   GraphQLError,
+  GraphQLFieldConfig,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLFieldConfig
+  GraphQLString
 } from "graphql";
-import ripemd160 from "ripemd160-js/ripemd160.js";
+import { ripemd160 } from "ripemd160-js";
 
+import { authorizing_account_type } from "../graphql_object_types/authorizing_account_type.js";
 import { name_type } from "../relocke_types/name_type.js";
 import { public_key_type } from "../relocke_types/public_key_type.js";
-import { authorizing_account_type } from "../graphql_object_types/authorizing_account_type.js";
 
 // --- TypeScript interfaces ---
 
@@ -56,7 +56,7 @@ async function public_key_to_legacy(key: string): Promise<string> {
   if (!key.startsWith("PUB_K1_")) return key;
 
   const public_key = base58_to_binary(key.replace("PUB_K1_", "")).slice(0, -4);
-  const checksum = (await ripemd160(public_key)).slice(0, 4) as Uint8Array;
+  const checksum = ripemd160(public_key).slice(0, 4) as Uint8Array;
 
   return "EOS" + binary_to_base58(new Uint8Array([...public_key, ...checksum]));
 }

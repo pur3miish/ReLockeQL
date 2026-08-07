@@ -1,28 +1,54 @@
-import { GraphQLScalarType, GraphQLError } from "graphql";
+import { GraphQLError, GraphQLScalarType } from "graphql";
 
+/**
+ * Antelope account/name scalar.
+ *
+ * Antelope names contain at most 13 characters.
+ *
+ * Characters 1-12:
+ *   . 1-5 a-z
+ *
+ * Character 13:
+ *   1-5 a-j
+ *
+ * A trailing "." is not valid because Spring requires
+ * the supplied name to equal its normalized representation.
+ */
 export const name_type = new GraphQLScalarType({
   name: "name",
+
   description: `
 \`Name type\`
 
-Names are unique identifiers on the blockchain.
+Names are identifiers encoded into Antelope's 64-bit \`name\` representation.
 
----
+### Name rules
 
-### name rules
-
-- Combination of lowercase characters
-- Can include numbers 1 - 5 and period “.” character
-- Must NOT end with a period “.”
-- Must NOT be longer than 12 characters
+- Maximum length is 13 characters.
+- Characters 1-12 may contain:
+  - lowercase \`a-z\`
+  - digits \`1-5\`
+  - period \`.\`
+- The 13th character, when present, is restricted to:
+  - lowercase \`a-j\`
+  - digits \`1-5\`
+- Names must not end with \`.\`.
 `,
+
   parseValue(value: unknown): string {
     if (typeof value !== "string") {
       throw new GraphQLError("Name must be a string.");
     }
-    if (value === "") return value;
 
-    if (!/^[1-5a-z.]{0,11}[1-5a-z]{1}$/gmu.test(value)) {
+    if (value === "") {
+      return "";
+    }
+
+    const valid = /^(?:[.1-5a-z]{0,11}[1-5a-z]|[.1-5a-z]{12}[1-5a-j])$/.test(
+      value
+    );
+
+    if (!valid) {
       throw new GraphQLError(`Invalid name “${value}”.`);
     }
 

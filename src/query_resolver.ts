@@ -1,4 +1,5 @@
 import { GraphQLError, GraphQLResolveInfo } from "graphql";
+
 import { type Context } from "./types/Context.js";
 
 /** Arguments passed to the resolver */

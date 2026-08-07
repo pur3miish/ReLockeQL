@@ -2,7 +2,7 @@
 
 # RelockeQL
 
-[![NPM Package](https://img.shields.io/npm/v/relockeql.svg)](https://www.npmjs.org/package/relockeql) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pur3miish/RelockeQL/blob/main/LICENSE)
+[![NPM Package](https://img.shields.io/npm/v/relockeql.svg)](https://www.npmjs.org/package/relockeql) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pur3miish/RelockeQL/blob/main/LICENSE) [![CI](https://github.com/pur3miish/ReLockeQL/actions/workflows/node.js.yml/badge.svg)](https://github.com/pur3miish/ReLockeQL/actions/workflows/node.js.yml)
 
 RelockeQL.
 
@@ -30,12 +30,12 @@ See the examples folder on how to run RelockeQL as a [Node.js](https://nodejs.or
 
 ### Serialize a contract ABI
 
-`serialize_abi` converts an Antelope ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Version 2.0.2 uses EOSJS's canonical `abi_def` serializer, including UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions.
+`serialize_abi` converts an Antelope ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Its self-contained encoder supports UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions without requiring an ABI serialization dependency.
 
 ```js
 import { serialize_abi } from "relockeql";
 
-const rawAbi = await serialize_abi({
+const rawAbi = serialize_abi({
   version: "eosio::abi/1.2",
   types: [],
   structs: [],
@@ -170,5 +170,4 @@ console.log(data);
 
 Supported runtime environments:
 
-- [Node.js](https://nodejs.org) versions `>=18.0.0`.
-- Browsers matching the [Browserslist](https://browsersl.ist) query [`> 0.5%, not OperaMini all, not dead`](https://browsersl.ist/?q=%3E+0.5%25%2C+not+OperaMini+all%2C+not+dead).
+- [Node.js](https://nodejs.org) versions `>=22.0.0`.

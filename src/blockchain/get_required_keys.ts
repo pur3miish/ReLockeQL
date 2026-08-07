@@ -1,15 +1,15 @@
 import {
   GraphQLError,
+  GraphQLFieldConfig,
   GraphQLInputObjectType,
   GraphQLList,
-  GraphQLString,
-  GraphQLFieldConfig
+  GraphQLString
 } from "graphql";
 
+import { authorization_type } from "../graphql_input_types/authorization.js";
 import { bytes_type } from "../relocke_types/bytes_type.js";
 import { name_type } from "../relocke_types/name_type.js";
 import { public_key_type } from "../relocke_types/public_key_type.js";
-import { authorization_type } from "../graphql_input_types/authorization.js";
 
 interface ActionInput {
   account?: string;

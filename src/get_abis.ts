@@ -1,11 +1,10 @@
 import { GraphQLError } from "graphql";
-import type { Abi } from "./blockchain/get_abi.js";
 
-interface FetchOptions extends RequestInit {}
+import type { Abi } from "./blockchain/get_abi.js";
 
 interface GetAbisParams {
   rpc_url: string | URL | Request;
-  fetchOptions?: FetchOptions;
+  fetchOptions?: RequestInit;
 }
 
 export interface AbiResponse {

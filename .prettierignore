@@ -1,2 +1,4 @@
-package.json
-test/snapshots
+dist/
+node_modules/
+coverage/
+test/snapshots/

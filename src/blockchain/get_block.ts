@@ -7,8 +7,8 @@ import {
   GraphQLString
 } from "graphql";
 
-import { bytes_type } from "../relocke_types/bytes_type.js";
 import { authorization_type } from "../graphql_object_types/authorization.js";
+import { bytes_type } from "../relocke_types/bytes_type.js";
 
 interface Action {
   account?: string;

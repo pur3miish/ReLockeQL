@@ -1,4 +1,6 @@
-import { Serialize } from "eosjs";
+import serialize from "eosio-wasm-js/serialize.js";
+
+import { validate_abi } from "./validate_abi.js";
 
 interface AbiField {
   name: string;
@@ -36,7 +38,7 @@ interface AbiClausePair {
 }
 
 interface AbiErrorMessage {
-  error_code: string | number;
+  error_code: string | number | bigint;
   error_msg: string;
 }
 
@@ -57,112 +59,266 @@ interface AbiExtensionsEntry {
 
 type AbiExtensionsInput = AbiExtensionsEntry | [number, string];
 
-interface AbiPrimaryKeyIndexDef {
-  name: string;
-  type: string;
-}
-
-interface AbiSecondaryIndexDef {
-  type: string;
-}
-
-interface AbiKvTableEntryDef {
-  type: string;
-  primary_index: AbiPrimaryKeyIndexDef;
-  secondary_indices: Record<string, AbiSecondaryIndexDef>;
-}
-
-interface AbiDef {
+export interface AbiDef {
   version: string;
-  types: AbiTypeDef[];
-  structs: AbiStruct[];
-  actions: AbiActionDef[];
-  tables: AbiTableDef[];
-  ricardian_clauses: AbiClausePair[];
-  error_messages: AbiErrorMessage[];
-  abi_extensions: AbiExtensionsInput[];
+
+  types?: AbiTypeDef[];
+  structs?: AbiStruct[];
+  actions?: AbiActionDef[];
+  tables?: AbiTableDef[];
+
+  ricardian_clauses?: AbiClausePair[];
+  error_messages?: AbiErrorMessage[];
+
+  abi_extensions?: AbiExtensionsInput[];
+
+  /**
+   * Trailing Antelope ABI binary extension.
+   *
+   * When omitted, no bytes are written for this field.
+   */
   variants?: AbiVariantDef[];
+
+  /**
+   * Trailing Antelope ABI binary extension.
+   *
+   * `variants` must exist before this field can be encoded.
+   */
   action_results?: AbiActionResultDef[];
-  kv_tables?: Record<string, AbiKvTableEntryDef>;
+
+  /**
+   * Not part of the current Antelope Spring abi_def layout.
+   *
+   * Retained here only so callers receive an explicit error rather
+   * than having the value silently ignored.
+   */
+  kv_tables?: unknown;
 }
 
-const REQUIRED_ABI_ARRAY_FIELDS = [
-  "types",
-  "structs",
-  "actions",
-  "tables",
-  "ricardian_clauses",
-  "error_messages",
-  "abi_extensions"
-] as const;
+interface EosioWasmSerialize {
+  name(value: string): string;
 
-function normalizeAbi(abi: Partial<AbiDef>): Record<string, unknown> {
-  const normalized: Record<string, unknown> = {
-    ...abi,
-    abi_extensions: (abi.abi_extensions ?? []).map((extension) =>
-      Array.isArray(extension)
-        ? { tag: extension[0], value: extension[1] }
-        : extension
-    )
-  };
+  uint16(value: string | number | bigint): string;
 
-  for (const field of REQUIRED_ABI_ARRAY_FIELDS) {
-    normalized[field] ??= [];
+  uint64(value: string | number | bigint): string;
+
+  varuint32(value: number): string;
+}
+
+const wasm = serialize as unknown as EosioWasmSerialize;
+
+const text_encoder = new TextEncoder();
+
+function bytes_to_hex(bytes: Uint8Array): string {
+  let hex = "";
+
+  for (const byte of bytes) {
+    hex += byte.toString(16).padStart(2, "0");
   }
 
-  return normalized;
-}
-
-function createAbiType(): Serialize.Type {
-  const abiType = Serialize.getTypesFromAbi(Serialize.createAbiTypes()).get(
-    "abi_def"
-  );
-
-  if (!abiType)
-    throw new Error("EOSJS did not provide its abi_def serializer.");
-  return abiType;
+  return hex;
 }
 
 /**
- * Serializes Antelope abi_def with EOSJS's SerialBuffer and ABI type graph.
- * This preserves UTF-8 string bytes and enforces the ordered trailing binary
- * extensions used by ABI 1.1 and 1.2.
+ * Serializes a JavaScript string using Antelope's
+ * string representation:
  *
- * @param abi - Relocke ABI object to serialize
- * @returns hex string of serialized ABI
+ * varuint32 UTF-8 byte length + UTF-8 bytes.
+ *
+ * Do not use eosio-wasm-js/string.js here because ABI
+ * strings must count UTF-8 bytes, not JavaScript characters.
  */
-export async function serialize_abi(abi: Partial<AbiDef>): Promise<string> {
-  const normalizedAbi = normalizeAbi(abi);
-  const version = normalizedAbi.version;
-  if (typeof version !== "string" || !Serialize.supportedAbiVersion(version)) {
+function serialize_string(value: string): string {
+  if (typeof value !== "string") {
+    throw new TypeError("Expected ABI string value.");
+  }
+
+  const bytes = text_encoder.encode(value);
+
+  return wasm.varuint32(bytes.length) + bytes_to_hex(bytes);
+}
+
+function serialize_vector<T>(
+  values: readonly T[],
+  serializer: (value: T) => string
+): string {
+  if (!Array.isArray(values)) {
+    throw new TypeError("Expected ABI vector to be an array.");
+  }
+
+  let output = wasm.varuint32(values.length);
+
+  for (const value of values) {
+    output += serializer(value);
+  }
+
+  return output;
+}
+
+/**
+ * Serializes vector<char>/bytes:
+ *
+ * varuint32 byte length + raw bytes.
+ */
+function serialize_bytes(value: string): string {
+  if (
+    typeof value !== "string" ||
+    value.length % 2 !== 0 ||
+    !/^[0-9a-fA-F]*$/.test(value)
+  ) {
+    throw new TypeError(
+      "ABI extension value must be an even-length hexadecimal string."
+    );
+  }
+
+  return wasm.varuint32(value.length / 2) + value.toLowerCase();
+}
+
+function serialize_type_def(value: AbiTypeDef): string {
+  return serialize_string(value.new_type_name) + serialize_string(value.type);
+}
+
+function serialize_field_def(value: AbiField): string {
+  return serialize_string(value.name) + serialize_string(value.type);
+}
+
+function serialize_struct_def(value: AbiStruct): string {
+  return (
+    serialize_string(value.name) +
+    serialize_string(value.base ?? "") +
+    serialize_vector(value.fields ?? [], serialize_field_def)
+  );
+}
+
+function serialize_action_def(value: AbiActionDef): string {
+  return (
+    wasm.name(value.name) +
+    serialize_string(value.type) +
+    serialize_string(value.ricardian_contract ?? "")
+  );
+}
+
+function serialize_table_def(value: AbiTableDef): string {
+  return (
+    wasm.name(value.name) +
+    serialize_string(value.index_type) +
+    serialize_vector(value.key_names ?? [], serialize_string) +
+    serialize_vector(value.key_types ?? [], serialize_string) +
+    serialize_string(value.type)
+  );
+}
+
+function serialize_clause_pair(value: AbiClausePair): string {
+  return serialize_string(value.id) + serialize_string(value.body);
+}
+
+function serialize_error_message(value: AbiErrorMessage): string {
+  return wasm.uint64(value.error_code) + serialize_string(value.error_msg);
+}
+
+function serialize_abi_extension(value: AbiExtensionsInput): string {
+  const tag = Array.isArray(value) ? value[0] : value.tag;
+
+  const data = Array.isArray(value) ? value[1] : value.value;
+
+  return wasm.uint16(tag) + serialize_bytes(data);
+}
+
+function serialize_variant_def(value: AbiVariantDef): string {
+  return (
+    serialize_string(value.name) +
+    serialize_vector(value.types, serialize_string)
+  );
+}
+
+function serialize_action_result_def(value: AbiActionResultDef): string {
+  return wasm.name(value.name) + serialize_string(value.result_type);
+}
+
+function assert_supported_version(version: unknown): asserts version is string {
+  if (typeof version !== "string" || !/^eosio::abi\/1\.\d+$/.test(version)) {
     throw new Error(`Unsupported ABI version: ${String(version)}`);
   }
+}
 
-  const abiType = createAbiType();
-  const buffer = new Serialize.SerialBuffer({
-    textEncoder: new TextEncoder(),
-    textDecoder: new TextDecoder()
-  });
-  abiType.serialize(buffer, normalizedAbi);
-  const rawAbi = buffer.asUint8Array();
-
-  // Do not return bytes unless EOSJS can decode the complete abi_def and the
-  // Ricardian clauses survive the round trip exactly.
-  const verificationBuffer = new Serialize.SerialBuffer({
-    textEncoder: new TextEncoder(),
-    textDecoder: new TextDecoder(),
-    array: rawAbi
-  });
-  const decoded = abiType.deserialize(verificationBuffer) as Partial<AbiDef>;
-  if (verificationBuffer.haveReadData()) {
-    throw new Error("EOSJS did not consume the complete serialized ABI.");
-  }
-  if (
-    JSON.stringify(decoded.ricardian_clauses ?? []) !==
-    JSON.stringify(normalizedAbi.ricardian_clauses ?? [])
-  ) {
-    throw new Error("EOSJS did not round-trip the Ricardian clauses exactly.");
+function assert_binary_extension_order(abi: AbiDef): void {
+  if (abi.action_results !== undefined && abi.variants === undefined) {
+    throw new Error(
+      "Cannot serialize abi_def.action_results when abi_def.variants is omitted."
+    );
   }
 
-  return Serialize.arrayToHex(rawAbi).toLowerCase();
+  if (abi.kv_tables !== undefined) {
+    throw new Error(
+      "abi_def.kv_tables is not part of the current Antelope Spring abi_def binary layout."
+    );
+  }
+}
+
+/**
+ * Serializes an Antelope abi_def into the hexadecimal
+ * bytes accepted by eosio::setabi.
+ *
+ * Binary layout:
+ *
+ * version
+ * types
+ * structs
+ * actions
+ * tables
+ * ricardian_clauses
+ * error_messages
+ * abi_extensions
+ * [variants]
+ * [action_results]
+ *
+ * `variants` and `action_results` are trailing fields.
+ * If an earlier trailing field is omitted, a later one
+ * cannot be encoded.
+ */
+export function serialize_abi(abi: AbiDef): string {
+  assert_supported_version(abi.version);
+
+  assert_binary_extension_order(abi);
+
+  validate_abi(abi);
+
+  let output = serialize_string(abi.version);
+
+  output += serialize_vector(abi.types ?? [], serialize_type_def);
+
+  output += serialize_vector(abi.structs ?? [], serialize_struct_def);
+
+  output += serialize_vector(abi.actions ?? [], serialize_action_def);
+
+  output += serialize_vector(abi.tables ?? [], serialize_table_def);
+
+  output += serialize_vector(
+    abi.ricardian_clauses ?? [],
+    serialize_clause_pair
+  );
+
+  output += serialize_vector(abi.error_messages ?? [], serialize_error_message);
+
+  output += serialize_vector(abi.abi_extensions ?? [], serialize_abi_extension);
+
+  /*
+   * These are `may_not_exist` trailing fields in
+   * Antelope's abi_def.
+   *
+   * Undefined means no bytes are written.
+   *
+   * [] means the field exists and its zero-length
+   * vector byte (00) is written.
+   */
+
+  if (abi.variants !== undefined) {
+    output += serialize_vector(abi.variants, serialize_variant_def);
+  }
+
+  if (abi.action_results !== undefined) {
+    output += serialize_vector(abi.action_results, serialize_action_result_def);
+  }
+
+  return output.toLowerCase();
 }

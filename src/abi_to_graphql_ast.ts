@@ -1,21 +1,21 @@
 import {
   GraphQLBoolean,
+  GraphQLFieldConfig,
+  GraphQLFieldConfigMap,
+  GraphQLInputFieldConfigMap,
   GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLFieldConfig,
-  GraphQLFieldConfigMap,
-  GraphQLInputFieldConfigMap,
-  GraphQLResolveInfo
+  GraphQLResolveInfo,
+  GraphQLString
 } from "graphql";
 
-import { relocke_types } from "./relocke_types.js";
+import type { Abi } from "./blockchain/get_abi.js";
 import { authorization_type } from "./graphql_input_types/authorization.js";
 import { query_arg_fields as query_argument_fields } from "./graphql_input_types/query_argument_fields.js";
 import { query_resolver as resolve } from "./query_resolver.js";
-import type { Abi } from "./blockchain/get_abi.js";
+import { relocke_types } from "./relocke_types.js";
 
 interface BaseFieldInfo {
   object: boolean;
@@ -66,11 +66,11 @@ interface GraphQLFieldWithResolve extends GraphQLFieldConfig<any, any> {
   ) => any;
 }
 
-interface GraphQLFields {
+export interface GraphQLFields {
   [key: string]: GraphQLFieldWithResolve;
 }
 
-interface GraphQLInaputFields {
+export interface GraphQLInaputFields {
   [key: string]: { type: any };
 }
 
@@ -233,10 +233,10 @@ export function get_graphql_fields_from_AST(
   const queryTypes: Record<string, GraphQLFieldConfig<any, any>> = {};
   const GQL_TYPES: Record<string, GraphQLObjectType> = {};
 
-  for (let table of tables) {
-    let { name: table_name, type: table_type } = table;
+  for (const table of tables) {
+    const { name, type: table_type } = table;
+    const table_name = name.replace(/\./g, "_");
 
-    table_name = table_name.replace(/\./g, "_");
     const table_fields = AST[table_type];
 
     const buildQGL = (
@@ -299,8 +299,6 @@ export function get_graphql_fields_from_AST(
         }),
         args: {
           arg: {
-            // @ts-ignore
-            name: "argument_type",
             type: query_argument_fields
           }
         },
@@ -316,12 +314,9 @@ export function get_graphql_fields_from_AST(
   const mutationTypes: Record<string, { type: GraphQLInputObjectType }> = {};
 
   for (const action of actions) {
-    let {
-      name: action_name,
-      type: action_type,
-      ricardian_contract = ""
-    } = action;
-    action_name = action_name.replace(/\./g, "_");
+    const { name, type: action_type, ricardian_contract = "" } = action;
+
+    const action_name = name.replace(/\./g, "_");
     const action_fields = AST[action_type];
 
     const buildQGL = (

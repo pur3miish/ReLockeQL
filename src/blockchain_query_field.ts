@@ -1,4 +1,5 @@
-import { GraphQLObjectType, GraphQLFieldConfig } from "graphql";
+import { GraphQLFieldConfig, GraphQLObjectType } from "graphql";
+
 import { abi_bin_to_json } from "./blockchain/abi_bin_to_json.js";
 import { get_abi } from "./blockchain/get_abi.js";
 import { get_account } from "./blockchain/get_account.js";

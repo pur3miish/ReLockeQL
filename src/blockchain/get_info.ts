@@ -1,8 +1,8 @@
 import {
   GraphQLError,
+  GraphQLFieldConfig,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLFieldConfig
+  GraphQLString
 } from "graphql";
 
 interface InfoData {

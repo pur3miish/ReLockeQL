@@ -1,4 +1,5 @@
-import { GraphQLInt, GraphQLObjectType, GraphQLFieldConfigMap } from "graphql";
+import { GraphQLFieldConfigMap, GraphQLInt, GraphQLObjectType } from "graphql";
+
 import { public_key_type } from "./public_key_type.js";
 
 export const Relocke_key_type = new GraphQLObjectType({
