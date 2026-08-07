@@ -5,7 +5,7 @@ import { configuration_type } from "./graphql_input_types/configuration.js";
 import { transaction_receipt_type as transaction_receipt } from "./graphql_object_types/transaction_receipt.js";
 import { mutation_resolver } from "./mutation_resolver.js";
 import { send_transaction_rpc } from "./send_transaction_rpc.js";
-import type { Context } from "./types/Context.ts";
+import type { Context } from "./types/Context.js";
 import { sha256 } from "./utils/sha256.js";
 
 type GraphQLFieldConfig<
@@ -32,8 +32,24 @@ export interface SerializedTransaction {
 }
 
 interface SendTransactionArgs {
-  actions: any; // Should match the 'actions' GraphQL input type
-  configuration?: any; // Should match configuration_type
+  actions: any;
+  configuration?: any;
+}
+
+function hex_to_bytes(hex: string): Uint8Array {
+  if (hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) {
+    throw new Error(
+      "Transaction signing data must be a valid even-length hexadecimal string."
+    );
+  }
+
+  const bytes = new Uint8Array(hex.length / 2);
+
+  for (let i = 0; i < bytes.length; i += 1) {
+    bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+
+  return bytes;
 }
 
 export const send_transaction = (
@@ -42,15 +58,19 @@ export const send_transaction = (
 ): GraphQLFieldConfig<any, any, SendTransactionArgs> => ({
   description:
     "Serialize a list of actions and push them to the blockchain in one step, requires private keys to be supplied to RelockeQL.",
+
   type: new GraphQLNonNull(transaction_receipt),
+
   args: {
     actions: {
       type: actionsType
     },
+
     configuration: {
       type: configuration_type
     }
   },
+
   async resolve(
     root: any,
     args: SendTransactionArgs,
@@ -58,24 +78,18 @@ export const send_transaction = (
     info: GraphQLResolveInfo
   ) {
     const network = context.network(root, args, info);
+
     const { chain_id, transaction_header, transaction_body, transaction } =
       await mutation_resolver(args, network, ast_list);
 
+    const context_free_data_hash = "0".repeat(64);
+
     const transaction_bytes =
-      chain_id +
-      transaction_header +
-      transaction_body +
-      "0000000000000000000000000000000000000000000000000000000000000000";
+      chain_id + transaction_header + transaction_body + context_free_data_hash;
 
-    const hash_to_sign = await sha256(
-      Uint8Array.from(
-        transaction_bytes
-          .match(/[a-fA-F0-9]{2}/gmu)!
-          .map((i) => Number(`0x${i}`))
-      )
-    );
+    const hash_to_sign = await sha256(hex_to_bytes(transaction_bytes));
 
-    const signatures = await context?.signTransaction?.(
+    const signatures = await context.signTransaction?.(
       hash_to_sign,
       {
         chain_id,
@@ -85,10 +99,16 @@ export const send_transaction = (
       transaction
     );
 
-    if (!signatures) throw new Error("No signatures available");
+    if (!signatures?.length) {
+      throw new Error("No signatures available.");
+    }
 
     return send_transaction_rpc(
-      { transaction_body, transaction_header, signatures },
+      {
+        transaction_body,
+        transaction_header,
+        signatures
+      },
       network
     );
   }

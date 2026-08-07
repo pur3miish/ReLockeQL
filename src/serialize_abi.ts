@@ -1,5 +1,3 @@
-// @ts-ignore eosio-wasm-js v6 does not currently ship declarations
-// for this deep export.
 import serialize from "eosio-wasm-js/serialize.js";
 
 interface AbiField {

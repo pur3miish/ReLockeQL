@@ -234,9 +234,9 @@ export function get_graphql_fields_from_AST(
   const GQL_TYPES: Record<string, GraphQLObjectType> = {};
 
   for (const table of tables) {
-    let { name: table_name, type: table_type } = table;
+    const { name, type: table_type } = table;
+    const table_name = name.replace(/\./g, "_");
 
-    table_name = table_name.replace(/\./g, "_");
     const table_fields = AST[table_type];
 
     const buildQGL = (
@@ -299,8 +299,6 @@ export function get_graphql_fields_from_AST(
         }),
         args: {
           arg: {
-            // @ts-ignore
-            name: "argument_type",
             type: query_argument_fields
           }
         },
@@ -316,12 +314,9 @@ export function get_graphql_fields_from_AST(
   const mutationTypes: Record<string, { type: GraphQLInputObjectType }> = {};
 
   for (const action of actions) {
-    let {
-      name: action_name,
-      type: action_type,
-      ricardian_contract = ""
-    } = action;
-    action_name = action_name.replace(/\./g, "_");
+    const { name, type: action_type, ricardian_contract = "" } = action;
+
+    const action_name = name.replace(/\./g, "_");
     const action_fields = AST[action_type];
 
     const buildQGL = (

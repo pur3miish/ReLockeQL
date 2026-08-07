@@ -22,7 +22,8 @@
 
 - Replaced EOSJS ABI serialization with ReLockeQL's own Antelope `abi_def` binary encoder.
 - Preserved UTF-8 byte lengths for Ricardian contracts and clauses.
-- Preserved ordered trailing ABI binary extensions including `variants`, `action_results`, and `kv_tables`.
+- - Preserved ordered trailing ABI binary extensions for `variants` and `action_results`.
+- Explicitly reject `kv_tables`, which is not part of the current Antelope Spring `abi_def` binary layout.
 - Migrated RIPEMD-160 usage to the synchronous `ripemd160-js` v4 API.
 - Migrated local `eosio-wasm-js` transaction serialization to its synchronous v6 APIs.
 - Updated TypeScript to v6.
@@ -35,17 +36,6 @@
 - Added a committed npm lockfile.
 - Added npm tarball smoke testing.
 - Added CI across Node.js 22, 24, and 26 on Linux and macOS.
-
-## 3.0.1
-
-### Fixed
-
-- Remove the `eosjs` runtime dependency and replace its ABI serialization path with a self-contained Antelope `abi_def` encoder.
-- Preserve canonical ABI bytes for UTF-8 Ricardian text, ABI extensions, variants, action results, and key-value tables.
-
-### Tests
-
-- Add dependency-free canonical byte fixtures covering required ABI fields and the ABI 1.1/1.2 binary extensions.
 
 ## 3.0.0
 

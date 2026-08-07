@@ -1,6 +1,4 @@
-// @ts-ignore
 import serialize from "eosio-wasm-js/serialize.js";
-// @ts-ignore
 import serialize_transaction_header from "eosio-wasm-js/transaction_header.js";
 import { GraphQLError } from "graphql";
 
@@ -61,12 +59,6 @@ interface MutationConfiguration {
 interface GetInfoResponse {
   chain_id: string;
   head_block_num: number;
-}
-
-interface GetBlockResponse {
-  timestamp: string;
-  block_num: number;
-  ref_block_prefix: number;
 }
 
 const default_config: Required<MutationConfiguration> = {

@@ -18,8 +18,6 @@ example:
     if (typeof value !== "string") {
       throw new GraphQLError("Extended asset must be a string");
     }
-    // Optionally add validation here if needed
-    const [symbol, contract] = value.split("@");
 
     return value;
   }

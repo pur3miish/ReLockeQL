@@ -170,5 +170,4 @@ console.log(data);
 
 Supported runtime environments:
 
-- [Node.js](https://nodejs.org) versions `>=18.0.0`.
-- Browsers matching the [Browserslist](https://browsersl.ist) query [`> 0.5%, not OperaMini all, not dead`](https://browsersl.ist/?q=%3E+0.5%25%2C+not+OperaMini+all%2C+not+dead).
+- [Node.js](https://nodejs.org) versions `>=22.0.0`.

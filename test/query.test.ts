@@ -37,5 +37,7 @@ describe("testing v1/chain/", () => {
     `;
 
     const { data } = await RelockeQL({ query });
+
+    console.log(data);
   });
 });
