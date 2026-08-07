@@ -37,6 +37,45 @@
 - Added npm tarball smoke testing.
 - Added CI across Node.js 22, 24, and 26 on Linux and macOS.
 
+### ABI validation
+
+- Added Spring-style semantic ABI validation before binary serialization.
+- Added validation for unknown struct field types.
+- Added detection of circular typedef references.
+- Added detection of circular struct inheritance.
+- Added duplicate definition checks for ABI types, structs, actions, tables, error messages, variants, and action results.
+- Added validation that action, table, variant, typedef, and action-result types resolve to valid Antelope built-in types, structs, typedefs, or variants.
+- Added validation for unknown struct base types.
+- Added support for validating Antelope type modifiers including dynamic arrays (`[]`), fixed-size arrays (`[N]`), optionals (`?`), and binary-extension fields (`$`).
+- Separated ABI semantic validation from ABI binary encoding through the new `validate_abi()` validation stage.
+
+### Protocol conformance
+
+- Expanded protocol conformance coverage using behavioral cases derived from Antelope Spring and eosjs test suites without adding eosjs as a dependency.
+- Added boundary tests for signed and unsigned 64-bit and 128-bit integer scalar types.
+- Corrected Antelope `name` validation to support valid 13-character names with the protocol-defined restricted 13th-character alphabet.
+- Added tests for invalid 13th-character names, oversized names, invalid characters, and non-normalized trailing periods.
+- Added asset symbol validation coverage for valid 1-7 character symbols and invalid lowercase, oversized, missing, and malformed symbols.
+- Added boolean scalar coverage for protocol-supported `true`, `false`, `0`, and `1` values.
+- Added Antelope block timestamp validation coverage.
+
+### Transaction serialization
+
+- Added deterministic transaction serialization conformance tests using known Antelope/eosjs-compatible transfer fixtures.
+- Added exact action-data byte assertions for token transfer actions.
+- Added deterministic TAPOS and transaction-header serialization coverage.
+- Added multi-action ordering tests.
+- Added coverage for separation of context-free actions and authorized actions.
+- Added transaction configuration boundary tests for `max_cpu_usage_ms` and `max_net_usage_words`.
+- Added UTF-8 action-string serialization regression coverage to ensure string length prefixes are based on UTF-8 byte length rather than JavaScript string length.
+
+### Tests
+
+- Added `protocol_conformance.test.ts`.
+- Added `transaction_conformance.test.ts`.
+- Added `abi_semantic_conformance.test.ts`.
+- Added regression coverage for ABI graph validation and protocol serialization edge cases that were previously accepted without validation.
+
 ## 3.0.0
 
 ### Breaking
