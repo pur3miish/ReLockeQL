@@ -104,10 +104,10 @@ const serialize_value = (type: string, value: any): string => {
   return serializer(value);
 };
 
-async function get_transaction_body(
+function get_transaction_body(
   actions: Array<Record<string, Record<string, any>>>,
   ast_list: ASTList
-): Promise<TransactionBodyResult> {
+): TransactionBodyResult {
   const actions_list_to_serialize: ActionToSerialize[] = [];
 
   for (const action of actions) {
@@ -194,7 +194,7 @@ async function get_transaction_body(
     const list = build_serialize_list(data, ast_list[contract][action_name]);
 
     let hex_string = "";
-    for await (const { type, value } of list)
+    for (const { type, value } of list)
       hex_string += serialize_value(type, value);
 
     if (authorization?.length)
@@ -269,7 +269,7 @@ export async function mutation_resolver(
     );
 
   const { rpc_url, fetchOptions } = network;
-  const { transaction_body, ...transaction_list } = await get_transaction_body(
+  const { transaction_body, ...transaction_list } = get_transaction_body(
     actions,
     ast_list
   );

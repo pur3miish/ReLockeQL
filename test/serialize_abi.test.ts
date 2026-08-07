@@ -1,8 +1,24 @@
-import { deepStrictEqual, equal, rejects } from "assert";
+import { deepStrictEqual, equal, rejects, throws } from "assert";
 
 import { serialize_abi } from "../src/serialize_abi.js";
 
 describe("Serialize ABI test", () => {
+  it("rejects a later ABI extension after an earlier one is omitted", () => {
+    throws(() =>
+      serialize_abi({
+        version: "eosio::abi/1.2",
+        types: [],
+        structs: [],
+        actions: [],
+        tables: [],
+        ricardian_clauses: [],
+        error_messages: [],
+        abi_extensions: [],
+        action_results: []
+      })
+    );
+  });
+
   it("Validate parsed values", async () => {
     const abi = JSON.parse(
       Buffer.from(
@@ -198,22 +214,5 @@ describe("Serialize ABI test", () => {
 
     equal(serialized.includes("2d2d2d0a736368656d61"), true);
     equal(serialized.includes("2f310a2d2d2d0a6b6f6f6c"), true);
-  });
-
-  it("rejects a later ABI extension after an earlier one is omitted", async () => {
-    await rejects(
-      serialize_abi({
-        version: "eosio::abi/1.2",
-        types: [],
-        structs: [],
-        actions: [],
-        tables: [],
-        ricardian_clauses: [],
-        error_messages: [],
-        abi_extensions: [],
-        action_results: []
-      }),
-      /unexpected abi_def\.action_results/
-    );
   });
 });

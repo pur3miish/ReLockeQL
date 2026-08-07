@@ -47,7 +47,7 @@
     "eslint:fix": "eslint . --fix",
     "prettier": "prettier -c .",
     "prettier:fix": "prettier --write .",
-    "test:unit": "mocha --require tsx \"test/**/*.ts\"",
+    "test:unit": "tsx ./node_modules/mocha/bin/mocha.js \"test/**/*.ts\"",
     "test": "npm run eslint && npm run prettier && npm run build && npm run test:unit",
     "server": "node test/server.js",
     "prepack": "npm run build",

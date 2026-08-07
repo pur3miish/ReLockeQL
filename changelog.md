@@ -1,5 +1,41 @@
 # RelockeQL changelog
 
+## 4.0.0 - 2026-08-07
+
+### Breaking
+
+- Raised the minimum supported Node.js version from Node.js 18 to Node.js 22.
+- Updated `eosio-wasm-js` from v5 to v6.
+- Updated `ripemd160-js` from v3 to v4.
+- `serialize_abi()` is now synchronous and returns a hexadecimal string directly instead of `Promise<string>`.
+- GraphQL public-key serialization no longer introduces unnecessary Promise wrappers.
+- Existing callers using `await serialize_abi(...)` remain compatible, but callers relying on `.then()`, `.catch()`, or explicit Promise typings must update.
+
+### Removed
+
+- Removed the `eosjs` runtime dependency.
+- Removed `ts-node`.
+- Removed the legacy `jsconfig.json`.
+- Removed the legacy ESLint configuration.
+
+### Changed
+
+- Replaced EOSJS ABI serialization with ReLockeQL's own Antelope `abi_def` binary encoder.
+- Preserved UTF-8 byte lengths for Ricardian contracts and clauses.
+- Preserved ordered trailing ABI binary extensions including `variants`, `action_results`, and `kv_tables`.
+- Migrated RIPEMD-160 usage to the synchronous `ripemd160-js` v4 API.
+- Migrated local `eosio-wasm-js` transaction serialization to its synchronous v6 APIs.
+- Updated TypeScript to v6.
+- Updated ESLint to v10 with flat configuration.
+- Updated Prettier to v3.
+- Standardized package compilation under `dist/`.
+
+### Added
+
+- Added a committed npm lockfile.
+- Added npm tarball smoke testing.
+- Added CI across Node.js 22, 24, and 26 on Linux and macOS.
+
 ## 3.0.1
 
 ### Fixed

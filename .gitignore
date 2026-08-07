@@ -1,4 +1,7 @@
-node_modules
+node_modules/
+dist/
+coverage/
+.nyc_output/
+*.tgz
 .DS_Store
 /test/server.mjs
-/dist

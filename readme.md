@@ -2,7 +2,7 @@
 
 # RelockeQL
 
-[![NPM Package](https://img.shields.io/npm/v/relockeql.svg)](https://www.npmjs.org/package/relockeql) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pur3miish/RelockeQL/blob/main/LICENSE)
+[![NPM Package](https://img.shields.io/npm/v/relockeql.svg)](https://www.npmjs.org/package/relockeql) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pur3miish/RelockeQL/blob/main/LICENSE) [![CI](https://github.com/pur3miish/ReLockeQL/actions/workflows/node.js.yml/badge.svg)](https://github.com/pur3miish/ReLockeQL/actions/workflows/node.js.yml)
 
 RelockeQL.
 

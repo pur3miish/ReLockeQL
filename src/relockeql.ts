@@ -109,7 +109,7 @@ export async function RelockeQL(
     [chain in ChainsType]: GraphQLFieldConfig<unknown, unknown, unknown>;
   };
 
-  for await (const chain of chains) {
+  for (const chain of chains) {
     const rpc_url = options?.chains?.[chain] ?? default_rpc_urls[chain];
     const contracts = options?.contracts?.[chain] ?? [];
 
@@ -228,7 +228,7 @@ export async function RelockeQL(
     } as Context,
     variableValues: variables,
     operationName,
-    async fieldResolver(rootValue, args, ctx, { fieldName }) {
+    fieldResolver(rootValue, args, ctx, { fieldName }) {
       return rootValue[fieldName];
     }
   });
