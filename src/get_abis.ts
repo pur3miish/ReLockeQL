@@ -1,4 +1,5 @@
 import { GraphQLError } from "graphql";
+
 import type { Abi } from "./blockchain/get_abi.js";
 
 interface FetchOptions extends RequestInit {}

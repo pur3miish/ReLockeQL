@@ -1,4 +1,4 @@
-import { GraphQLScalarType, GraphQLError } from "graphql";
+import { GraphQLError, GraphQLScalarType } from "graphql";
 
 /**
  * Generates a GraphQL scalar unsigned integer type of size `bits`.

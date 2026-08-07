@@ -1,4 +1,4 @@
-import { GraphQLScalarType, GraphQLError } from "graphql";
+import { GraphQLError, GraphQLScalarType } from "graphql";
 
 export const extended_asset_type = new GraphQLScalarType({
   name: "extended_asset",

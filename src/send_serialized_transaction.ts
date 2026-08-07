@@ -1,13 +1,13 @@
 import {
+  GraphQLFieldConfig,
   GraphQLList,
   GraphQLNonNull,
-  GraphQLFieldConfig,
   GraphQLResolveInfo
 } from "graphql";
 
+import { transaction_receipt_type as transaction_receipt } from "./graphql_object_types/transaction_receipt.js";
 import { bytes_type } from "./relocke_types/bytes_type.js";
 import { signature_type } from "./relocke_types/signature_type.js";
-import { transaction_receipt_type as transaction_receipt } from "./graphql_object_types/transaction_receipt.js";
 import { send_transaction_rpc } from "./send_transaction_rpc.js";
 import { type Context } from "./types/Context.js";
 

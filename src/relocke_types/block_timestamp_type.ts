@@ -1,4 +1,4 @@
-import { GraphQLScalarType, GraphQLError } from "graphql";
+import { GraphQLError, GraphQLScalarType } from "graphql";
 
 export const block_timestamp_type = new GraphQLScalarType({
   name: "block_timestamp_type",

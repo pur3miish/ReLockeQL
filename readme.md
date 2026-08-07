@@ -30,12 +30,12 @@ See the examples folder on how to run RelockeQL as a [Node.js](https://nodejs.or
 
 ### Serialize a contract ABI
 
-`serialize_abi` converts an Antelope ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Version 2.0.2 uses EOSJS's canonical `abi_def` serializer, including UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions.
+`serialize_abi` converts an Antelope ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Its self-contained encoder supports UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions without requiring an ABI serialization dependency.
 
 ```js
 import { serialize_abi } from "relockeql";
 
-const rawAbi = await serialize_abi({
+const rawAbi = serialize_abi({
   version: "eosio::abi/1.2",
   types: [],
   structs: [],

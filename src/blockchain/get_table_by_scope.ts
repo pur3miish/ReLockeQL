@@ -3,12 +3,12 @@ import serializeName from "eosio-wasm-js/name.js";
 import {
   GraphQLEnumType,
   GraphQLError,
+  GraphQLFieldConfig,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLFieldConfig
+  GraphQLString
 } from "graphql";
 
 import { name_type } from "../relocke_types/name_type.js";

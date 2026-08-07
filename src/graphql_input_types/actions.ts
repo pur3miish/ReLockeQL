@@ -1,8 +1,8 @@
 import {
+  GraphQLInputFieldConfigMap,
   GraphQLInputObjectType,
   GraphQLList,
-  GraphQLNonNull,
-  GraphQLInputFieldConfigMap
+  GraphQLNonNull
 } from "graphql";
 
 export const actions_type = (

@@ -1,30 +1,28 @@
 import {
-  build_graphql_fields_from_abis,
-  type AccountABI
-} from "./build_graphql_fields_from_abis.js";
+  execute,
+  type GraphQLError,
+  type GraphQLFieldConfig,
+  type GraphQLFieldConfigMap,
+  GraphQLObjectType,
+  type GraphQLResolveInfo,
+  GraphQLSchema,
+  parse,
+  type ResponsePath,
+  Source,
+  validate
+} from "graphql";
+
 import { blockchain_query_field } from "./blockchain_query_field.js";
-import { get_abis, type AbiResponse } from "./get_abis.js";
+import {
+  type AccountABI,
+  build_graphql_fields_from_abis
+} from "./build_graphql_fields_from_abis.js";
+import { type AbiResponse, get_abis } from "./get_abis.js";
 import { actions_type as actions } from "./graphql_input_types/actions.js";
 import { send_serialized_transaction } from "./send_serialized_transaction.js";
 import { send_transaction } from "./send_transaction.js";
 import { serialize_transaction } from "./serialize_transaction.js";
-import type {
-  Context,
-  SignTransactionContext
-} from "./types/Context.js";
-import {
-  execute,
-  GraphQLObjectType,
-  GraphQLSchema,
-  parse,
-  Source,
-  validate,
-  type GraphQLError,
-  type ResponsePath,
-  type GraphQLFieldConfig,
-  type GraphQLResolveInfo,
-  type GraphQLFieldConfigMap
-} from "graphql";
+import type { Context, SignTransactionContext } from "./types/Context.js";
 
 export interface RelockeQLRequest {
   query: string;
@@ -36,12 +34,7 @@ export interface RelockeQLRequest {
  * List of Relocke chains.
  */
 declare type ChainsType =
-  | "vaulta"
-  | "telos"
-  | "xpr"
-  | "wax"
-  | "jungle"
-  | string;
+  "vaulta" | "telos" | "xpr" | "wax" | "jungle" | string;
 
 /**
  * Lists you smart contracts across the various Relocke chains.

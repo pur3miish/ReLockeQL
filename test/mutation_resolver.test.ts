@@ -2,7 +2,6 @@ import { strictEqual } from "assert";
 
 import { abi_to_graphql_ast } from "../src/abi_to_graphql_ast.js";
 import { mutation_resolver } from "../src/mutation_resolver.js";
-
 import eosio_abi from "./abis/eosio.json" with { type: "json" };
 
 describe("mutation_resolver", () => {

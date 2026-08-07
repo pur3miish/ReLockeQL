@@ -1,10 +1,10 @@
 import {
   GraphQLError,
+  GraphQLFieldConfig,
   GraphQLInt,
   GraphQLList,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLFieldConfig
+  GraphQLString
 } from "graphql";
 
 import { Relocke_key_type as key_type } from "../relocke_types/key_type.js";

@@ -1,16 +1,17 @@
 import {
-  GraphQLInputObjectType,
-  GraphQLObjectType,
   GraphQLFieldConfigMap,
   GraphQLInputFieldConfigMap,
+  GraphQLInputObjectType,
+  GraphQLObjectType,
   GraphQLResolveInfo
 } from "graphql";
-import type { Abi } from "./blockchain/get_abi.js";
+
 import {
   ABI,
   abi_to_graphql_ast,
   get_graphql_fields_from_AST
 } from "./abi_to_graphql_ast.js";
+import type { Abi } from "./blockchain/get_abi.js";
 
 export interface AccountABI {
   abi: Abi;

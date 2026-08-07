@@ -1,4 +1,5 @@
 import { GraphQLInputObjectType, GraphQLNonNull } from "graphql";
+
 import { name_type } from "../relocke_types/name_type.js";
 
 /**

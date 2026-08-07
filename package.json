@@ -1,29 +1,15 @@
 {
   "name": "relockeql",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "A GraphQL implementation for interacting with Relocke based blockchains.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pur3miish/RelockeQL.git"
+    "url": "git+https://github.com/pur3miish/ReLockeQL.git"
   },
-  "bugs": "https://github.com/pur3miish/RelockeQL/issues",
-  "homepage": "https://github.com/pur3miish/RelockeQL#readme",
+  "bugs": "https://github.com/pur3miish/ReLockeQL/issues",
+  "homepage": "https://github.com/pur3miish/ReLockeQL#readme",
   "author": "pur3miish",
   "license": "MIT",
-  "scripts": {
-    "build": "tsc",
-    "test": "mocha --require tsx 'test/**/*.ts'",
-    "eslint": "eslint .",
-    "prettier": "prettier -c .",
-    "prettier:readme": "prettier --write readme.md",
-    "server": "node test/server.js",
-    "types": "tsc -p jsconfig.json",
-    "prepublishOnly": "npm run build && npm run test"
-  },
-  "engines": {
-    "node": ">= 18.0.0"
-  },
-  "sideEffects": false,
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -32,19 +18,41 @@
     "dist",
     "changelog.md"
   ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     },
     "./relockeql": {
+      "types": "./dist/relockeql.d.ts",
       "import": "./dist/relockeql.js",
-      "types": "./dist/relockeql.d.ts"
+      "default": "./dist/relockeql.js"
     },
     "./relockeql.js": {
+      "types": "./dist/relockeql.d.ts",
       "import": "./dist/relockeql.js",
-      "types": "./dist/relockeql.d.ts"
-    }
+      "default": "./dist/relockeql.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "clean": "node ./scripts/clean.mjs",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "eslint": "eslint .",
+    "eslint:fix": "eslint . --fix",
+    "prettier": "prettier -c .",
+    "prettier:fix": "prettier --write .",
+    "test:unit": "mocha --require tsx \"test/**/*.ts\"",
+    "test": "npm run eslint && npm run prettier && npm run build && npm run test:unit",
+    "server": "node test/server.js",
+    "prepack": "npm run build",
+    "smoke": "npm test && node scripts/smoke-test.mjs",
+    "prepublishOnly": "npm run smoke"
   },
   "browserslist": [
     "> 0.5%, not OperaMini all, not IE > 0, not dead"
@@ -64,29 +72,29 @@
     "query",
     "language"
   ],
-  "devDependencies": {
-    "@types/chai": "^5.2.2",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^18.19.118",
-    "chai": "^5.2.1",
-    "eslint": "^8.34.0",
-    "eslint-plugin-simple-import-sort": "^10.0.0",
-    "graphql": "^16.11.0",
-    "mocha": "^11.7.1",
-    "nodemon": "^3.0.1",
-    "prettier": "^2.8.4",
-    "snapshot-assertion": "^5.0.0",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
-  },
   "dependencies": {
     "base58-js": "^3.0.3",
-    "eosio-wasm-js": "^5.0.2",
-    "eosjs": "^22.1.0",
-    "ripemd160-js": "^3.0.4"
+    "eosio-wasm-js": "^6.0.0",
+    "ripemd160-js": "^4.0.0"
   },
   "peerDependencies": {
     "graphql": "^16.11.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/chai": "^5.2.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.20.1",
+    "chai": "^6.2.2",
+    "eslint": "^10.8.0",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "globals": "^17.9.0",
+    "graphql": "^16.11.0",
+    "mocha": "^11.7.1",
+    "prettier": "^3.9.6",
+    "snapshot-assertion": "^5.0.0",
+    "tsx": "^4.23.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.66.0"
   }
 }

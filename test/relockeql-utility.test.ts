@@ -6,14 +6,14 @@ import {
   Source,
   validate
 } from "graphql";
-import {build_graphql_fields_from_abis as build_graphql_fields_from_abis} from "../src/build_graphql_fields_from_abis.js";
-import {actions_type as actions} from "../src/graphql_input_types/actions.js";
-import {serialize_transaction} from "../src/serialize_transaction.js";
 
+import { build_graphql_fields_from_abis as build_graphql_fields_from_abis } from "../src/build_graphql_fields_from_abis.js";
+import { actions_type as actions } from "../src/graphql_input_types/actions.js";
+import { serialize_transaction } from "../src/serialize_transaction.js";
 /* Importing the ABIs into a list */
 import eosio_abi from "./abis/eosio.json" with { type: "json" };
-import token_abi from "./abis/eosio.token.json" with { type: "json" };;
-import nutrientjrn_abi from "./abis/nutrientjrn.abi.json" with { type: "json" };;
+import token_abi from "./abis/eosio.token.json" with { type: "json" };
+import nutrientjrn_abi from "./abis/nutrientjrn.abi.json" with { type: "json" };
 import variantTypeExample from "./abis/variantTypeExample.abi.json" with { type: "json" };
 
 const ABI_LIST = [

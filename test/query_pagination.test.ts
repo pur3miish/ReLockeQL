@@ -7,8 +7,8 @@ import {
   validate
 } from "graphql";
 
-import { build_graphql_fields_from_abis } from "../src/build_graphql_fields_from_abis.js";
 import type { Abi } from "../src/blockchain/get_abi.js";
+import { build_graphql_fields_from_abis } from "../src/build_graphql_fields_from_abis.js";
 
 const abi: Abi = {
   version: "eosio::abi/1.2",

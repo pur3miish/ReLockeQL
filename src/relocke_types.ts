@@ -1,4 +1,4 @@
-import { GraphQLScalarType, GraphQLObjectType, GraphQLString } from "graphql";
+import { GraphQLObjectType, GraphQLScalarType, GraphQLString } from "graphql";
 
 import { asset_type as asset } from "./relocke_types/asset_type.js";
 import { block_timestamp_type } from "./relocke_types/block_timestamp_type.js";
@@ -20,10 +20,7 @@ import { varint32_type as varint32 } from "./relocke_types/varint32_type.js";
 import { varuint32_type as varuint32 } from "./relocke_types/varuint32_type.js";
 
 type GraphQLTypeAny =
-  | GraphQLScalarType
-  | GraphQLObjectType
-  | typeof GraphQLString
-  | any;
+  GraphQLScalarType | GraphQLObjectType | typeof GraphQLString | any;
 
 /**
  * An object containing EOSIO native GraphQL types.

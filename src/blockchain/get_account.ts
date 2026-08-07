@@ -1,12 +1,12 @@
 import {
-  GraphQLError,
   GraphQLBoolean,
+  GraphQLError,
+  GraphQLFieldConfig,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLFieldConfig
+  GraphQLString
 } from "graphql";
 
 import { asset_type } from "../relocke_types/asset_type.js";

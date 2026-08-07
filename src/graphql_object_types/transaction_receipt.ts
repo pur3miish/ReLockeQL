@@ -16,11 +16,7 @@ import { authorization_type as authorizing_account_type } from "./authorization.
 // -----------------------------
 
 export type TransactionStatus =
-  | "executed"
-  | "soft_fail"
-  | "hard_fail"
-  | "delayed"
-  | "expired";
+  "executed" | "soft_fail" | "hard_fail" | "delayed" | "expired";
 
 export interface BandwidthCost {
   cpu_usage_us: number;

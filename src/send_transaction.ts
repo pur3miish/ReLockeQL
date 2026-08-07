@@ -1,12 +1,12 @@
+import type { GraphQLResolveInfo } from "graphql";
 import { GraphQLNonNull } from "graphql";
-import { sha256 } from "./utils/sha256.js";
 
 import { configuration_type } from "./graphql_input_types/configuration.js";
 import { transaction_receipt_type as transaction_receipt } from "./graphql_object_types/transaction_receipt.js";
 import { mutation_resolver } from "./mutation_resolver.js";
 import { send_transaction_rpc } from "./send_transaction_rpc.js";
-import type { GraphQLResolveInfo } from "graphql";
 import type { Context } from "./types/Context.ts";
+import { sha256 } from "./utils/sha256.js";
 
 type GraphQLFieldConfig<
   TSource,

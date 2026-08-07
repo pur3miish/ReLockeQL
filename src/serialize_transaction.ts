@@ -1,9 +1,9 @@
 import { GraphQLList, GraphQLNonNull } from "graphql";
 
-import { public_key_type } from "./relocke_types/public_key_type.js";
 import { configuration_type } from "./graphql_input_types/configuration.js";
 import { packed_transaction_type } from "./graphql_object_types/packed_transaction.js";
 import { mutation_resolver } from "./mutation_resolver.js";
+import { public_key_type } from "./relocke_types/public_key_type.js";
 import { type Context } from "./types/Context.js";
 
 interface SerializeTransactionArgs {
