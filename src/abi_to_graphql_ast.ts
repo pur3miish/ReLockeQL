@@ -66,11 +66,11 @@ interface GraphQLFieldWithResolve extends GraphQLFieldConfig<any, any> {
   ) => any;
 }
 
-interface GraphQLFields {
+export interface GraphQLFields {
   [key: string]: GraphQLFieldWithResolve;
 }
 
-interface GraphQLInaputFields {
+export interface GraphQLInaputFields {
   [key: string]: { type: any };
 }
 
