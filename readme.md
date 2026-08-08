@@ -4,9 +4,7 @@
 
 [![NPM Package](https://img.shields.io/npm/v/relockeql.svg)](https://www.npmjs.org/package/relockeql) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pur3miish/RelockeQL/blob/main/LICENSE) [![CI](https://github.com/pur3miish/ReLockeQL/actions/workflows/node.js.yml/badge.svg)](https://github.com/pur3miish/ReLockeQL/actions/workflows/node.js.yml)
 
-RelockeQL.
-
-RelockeQL is a GraphQL client and server library that allows developers to interact with Relocke-based blockchains using GraphQL. It provides a unified interface to communicate with different chains in the ecosystem, enabling developers to leverage the unique features and capabilities of each blockchain while still benefiting from a consistent development experience.
+RelockeQL is a GraphQL client and server library that allows developers to interact with Relocke-based blockchains (Antelope, EOSIO, WAX, TELOS, XPR, VAULTA) using GraphQL. It provides a unified interface to communicate with different chains in the ecosystem, enabling developers and agentic tools to leverage the unique features and capabilities of each blockchain while still benefiting from a consistent development experience.
 
 As a GraphQL client library, RelockeQL simplifies the process of building and executing GraphQL queries and mutations, handling errors, and signing transactions. As a server library, it provides a framework for building GraphQL APIs that can interact with Relocke-based blockchains and other data sources.
 
