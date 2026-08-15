@@ -239,9 +239,9 @@ A Hyperion `executed: false` not-found response resolves to `null`. Missing, una
 
 ### List specific contract actions
 
-`get_actions` requires a notified account, contract, and action name, which Hyperion combines as indexed account and `contract:action` filters. It always requests newest-first results, disables total-result counting, omits large binary data, and limits results to at most 100. It does not assume that a provider maintains Hyperion's optional hot-index alias. Offset, ascending scans, and arbitrary indexed-field filters are intentionally unavailable.
+`get_actions` requires a notified account, contract, action name, and lower time boundary, which Hyperion combines as indexed account, `contract:action`, and time-range filters. Searches span at most seven days, request newest-first results, disable total-result counting, omit large binary data, default to 10 results, and return at most 25. It does not assume that a provider maintains Hyperion's optional hot-index alias. Offset, ascending scans, and arbitrary indexed-field filters are intentionally unavailable.
 
-The optional `before` boundary uses the `iso8601_datetime` GraphQL scalar rather than an unrestricted string. It accepts `YYYY-MM-DDTHH:mm:ss`, optional fractional seconds, and an optional `Z` or `±HH:mm` offset. Pass the oldest returned action timestamp as `before` to retrieve the next older window without offset pagination.
+The required `after` and optional `before` boundaries use the `iso8601_datetime` GraphQL scalar rather than unrestricted strings. It accepts `YYYY-MM-DDTHH:mm:ss`, optional fractional seconds, and an optional `Z` or `±HH:mm` offset. Keep `after` fixed and pass the oldest returned action timestamp as `before` to retrieve the next older page inside the bounded window. Query an earlier explicit seven-day window when that window is exhausted.
 
 ```js
 const query = /* GraphQL */ `
@@ -252,8 +252,9 @@ const query = /* GraphQL */ `
           account: "alice"
           contract: "eosio.token"
           action: "transfer"
+          after: "2026-08-08T10:00:00Z"
           before: "2026-08-15T10:00:00Z"
-          limit: 25
+          limit: 10
         ) {
           query_time_ms
           actions {

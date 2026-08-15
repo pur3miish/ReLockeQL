@@ -16,7 +16,7 @@
 - Added `get_blockchain.get_actions`, backed by bounded `/v2/history/get_actions` queries that require a notified account, contract, and action name.
 - Added normalized Hyperion transactions, actions, authorization actors, receivers, and decoded JSON action data.
 - Added introspectable descriptions for the chain entry points, Hyperion queries and result types, and nested `get_block` transaction and action fields.
-- Added the `iso8601_datetime` scalar and use it to validate action-history `before` boundaries supplied as literals or variables.
+- Added the `iso8601_datetime` scalar and use it to validate action-history time boundaries supplied as literals or variables.
 - Updated the example HTTP server to accept all RPC and Hyperion providers through one required `RELOCKEQL_CHAINS` JSON map, return one JSON response per request, reject unsupported methods cleanly, and remain available after malformed requests.
 - Added an automatically loaded, Git-ignored `.env` workflow and a checked-in `.env.example` for local multi-chain server configuration.
 - Added provider timeout, unavailable (including HTTP 404), malformed-response, missing-endpoint, transaction-ID mismatch, and confirmed not-found-envelope handling.
@@ -28,8 +28,8 @@
 
 - Hyperion calls use one explicitly configured provider with no fallback.
 - Hyperion calls time out after eight seconds unless the caller supplies a request signal.
-- Action searches default to 25 results and reject limits above 100.
-- Action searches are always descending, bounded, filtered by notified account and `contract:action`, request `noBinary`, and disable total-result tracking; offset, arbitrary indexed-field filters, and ascending scans are not exposed.
+- Action searches require a lower time boundary, reject windows wider than seven days, default to 10 results, and reject limits above 25.
+- Action searches are always descending, filtered by notified account, `contract:action`, and time range, request `noBinary`, and disable total-result tracking; offset, arbitrary indexed-field filters, and ascending scans are not exposed.
 - Action searches do not send `hot_only`, because otherwise compatible providers without Hyperion's optional hot-index alias return `index_not_found_exception`.
 - Hyperion endpoint keys are excluded from the GraphQL chain catalog and cannot be mistaken for RPC chains.
 

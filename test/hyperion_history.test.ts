@@ -103,6 +103,7 @@ describe("Hyperion history", () => {
       );
     };
 
+    const after = "2026-08-08T10:00:00Z";
     const before = "2026-08-15T10:00:00Z";
     const result = await RelockeQL(
       {
@@ -114,6 +115,7 @@ describe("Hyperion history", () => {
                   account: "alice"
                   contract: "eosio.token"
                   action: "transfer"
+                  after: "${after}"
                   before: "${before}"
                   limit: 10
                 ) {
@@ -139,6 +141,7 @@ describe("Hyperion history", () => {
     strictEqual(result.errors, undefined);
     strictEqual(requestedUrl?.pathname, "/v2/history/get_actions");
     strictEqual(requestedUrl?.searchParams.get("account"), "alice");
+    strictEqual(requestedUrl?.searchParams.get("after"), after);
     strictEqual(
       requestedUrl?.searchParams.get("filter"),
       "eosio.token:transfer"
@@ -292,7 +295,7 @@ describe("Hyperion history", () => {
     );
   });
 
-  it("defaults action searches to 25 results", async () => {
+  it("defaults action searches to 10 results", async () => {
     let requestedUrl: URL | undefined;
 
     globalThis.fetch = async (input) => {
@@ -301,6 +304,74 @@ describe("Hyperion history", () => {
     };
 
     const result = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          {
+            vaulta {
+              get_blockchain {
+                get_actions(
+                  account: "alice"
+                  contract: "eosio.token"
+                  action: "transfer"
+                  after: "2026-08-08T10:00:00Z"
+                  before: "2026-08-15T10:00:00Z"
+                ) {
+                  actions {
+                    transaction_id
+                  }
+                }
+              }
+            }
+          }
+        `
+      },
+      {
+        chains: {
+          vaulta: "https://rpc.example",
+          hyperion_vaulta: "https://history.example"
+        }
+      }
+    );
+
+    strictEqual(result.errors, undefined);
+    strictEqual(requestedUrl?.searchParams.get("limit"), "10");
+  });
+
+  it("requires account, contract, action, and after before contacting Hyperion", async () => {
+    let fetchCalled = false;
+    globalThis.fetch = async () => {
+      fetchCalled = true;
+      return new Response("{}");
+    };
+
+    const result = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          {
+            vaulta {
+              get_blockchain {
+                get_actions(
+                  account: "alice"
+                  contract: "eosio.token"
+                  after: "2026-08-08T10:00:00Z"
+                ) {
+                  actions {
+                    transaction_id
+                  }
+                }
+              }
+            }
+          }
+        `
+      },
+      {
+        chains: {
+          vaulta: "https://rpc.example",
+          hyperion_vaulta: "https://history.example"
+        }
+      }
+    );
+    const missingAfterResult = await RelockeQL(
       {
         query: /* GraphQL */ `
           {
@@ -328,46 +399,15 @@ describe("Hyperion history", () => {
       }
     );
 
-    strictEqual(result.errors, undefined);
-    strictEqual(requestedUrl?.searchParams.get("limit"), "25");
-  });
-
-  it("requires account, contract, and action before contacting Hyperion", async () => {
-    let fetchCalled = false;
-    globalThis.fetch = async () => {
-      fetchCalled = true;
-      return new Response("{}");
-    };
-
-    const result = await RelockeQL(
-      {
-        query: /* GraphQL */ `
-          {
-            vaulta {
-              get_blockchain {
-                get_actions(account: "alice", contract: "eosio.token") {
-                  actions {
-                    transaction_id
-                  }
-                }
-              }
-            }
-          }
-        `
-      },
-      {
-        chains: {
-          vaulta: "https://rpc.example",
-          hyperion_vaulta: "https://history.example"
-        }
-      }
-    );
-
     strictEqual(fetchCalled, false);
     match(result.errors?.[0].message ?? "", /argument "action".*required/iu);
+    match(
+      missingAfterResult.errors?.[0].message ?? "",
+      /argument "after".*required/iu
+    );
   });
 
-  it("enforces ISO-8601 before boundaries for literals and variables", async () => {
+  it("enforces ISO-8601 time boundaries for literals and variables", async () => {
     let fetchCalled = false;
     globalThis.fetch = async () => {
       fetchCalled = true;
@@ -389,6 +429,7 @@ describe("Hyperion history", () => {
                   account: "alice"
                   contract: "eosio.token"
                   action: "transfer"
+                  after: "2026-02-22T10:00:00Z"
                   before: "2026-02-29T10:00:00Z"
                 ) {
                   actions {
@@ -412,6 +453,7 @@ describe("Hyperion history", () => {
                   account: "alice"
                   contract: "eosio.token"
                   action: "transfer"
+                  after: "2026-08-08T10:00:00Z"
                   before: $before
                 ) {
                   actions {
@@ -430,6 +472,55 @@ describe("Hyperion history", () => {
     strictEqual(fetchCalled, false);
     match(literalResult.errors?.[0].message ?? "", /calendar value/iu);
     match(variableResult.errors?.[0].message ?? "", /Date-time must use/iu);
+  });
+
+  it("rejects action windows wider than seven days or in reverse", async () => {
+    let fetchCalled = false;
+    globalThis.fetch = async () => {
+      fetchCalled = true;
+      return new Response("{}");
+    };
+    const options = {
+      chains: {
+        vaulta: "https://rpc.example",
+        hyperion_vaulta: "https://history.example"
+      }
+    };
+    const query = (after: string, before: string) => /* GraphQL */ `
+      {
+        vaulta {
+          get_blockchain {
+            get_actions(
+              account: "alice"
+              contract: "eosio.token"
+              action: "transfer"
+              after: "${after}"
+              before: "${before}"
+            ) {
+              actions {
+                transaction_id
+              }
+            }
+          }
+        }
+      }
+    `;
+    const broadResult = await RelockeQL(
+      {
+        query: query("2026-08-01T10:00:00Z", "2026-08-15T10:00:00Z")
+      },
+      options
+    );
+    const reversedResult = await RelockeQL(
+      {
+        query: query("2026-08-15T10:00:00Z", "2026-08-14T10:00:00Z")
+      },
+      options
+    );
+
+    strictEqual(fetchCalled, false);
+    strictEqual(broadResult.errors?.[0].extensions?.code, "BAD_USER_INPUT");
+    strictEqual(reversedResult.errors?.[0].extensions?.code, "BAD_USER_INPUT");
   });
 
   it("reports HTTP failures instead of treating them as not-found transactions", async () => {
@@ -488,6 +579,8 @@ describe("Hyperion history", () => {
                   account: "alice"
                   contract: "eosio.token"
                   action: "transfer"
+                  after: "2026-08-08T10:00:00Z"
+                  before: "2026-08-15T10:00:00Z"
                 ) {
                   actions {
                     transaction_id
@@ -529,7 +622,9 @@ describe("Hyperion history", () => {
                   account: "alice"
                   contract: "eosio.token"
                   action: "transfer"
-                  limit: 101
+                  after: "2026-08-08T10:00:00Z"
+                  before: "2026-08-15T10:00:00Z"
+                  limit: 26
                 ) {
                   actions {
                     transaction_id

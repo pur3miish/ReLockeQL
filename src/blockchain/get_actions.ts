@@ -11,17 +11,23 @@ import {
   requireHyperionNetwork
 } from "./hyperion.js";
 
-const DEFAULT_LIMIT = 25;
-const MAX_LIMIT = 100;
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 25;
+const MAX_WINDOW_MS = 7 * 24 * 60 * 60 * 1_000;
 
 type HyperionActionsPayload = {
   actions?: unknown;
   query_time_ms?: unknown;
 };
 
+function dateTimeMs(value: string) {
+  const hasOffset = /(?:Z|[+-]\d{2}:\d{2})$/u.test(value);
+  return Date.parse(hasOffset ? value : `${value}Z`);
+}
+
 export const get_actions = {
   description:
-    "List a bounded set of newest-first actions for one notified account, contract, and action name through this chain's explicitly configured Hyperion endpoint. Total-result counting, offset pagination, arbitrary indexed-field filters, and ascending scans are not exposed.",
+    "List a bounded set of newest-first actions for one notified account, contract, and action name through this chain's explicitly configured Hyperion endpoint. Searches require a lower time boundary, span at most seven days, and do not expose total-result counting, offset pagination, arbitrary indexed-field filters, or ascending scans.",
   type: new GraphQLNonNull(hyperion_action_search_result_type),
   args: {
     account: {
@@ -37,9 +43,14 @@ export const get_actions = {
       description: "Exact contract action name to list.",
       type: new GraphQLNonNull(name_type)
     },
+    after: {
+      description:
+        "Required exclusive lower time boundary as an ISO-8601 timestamp. The search window may span no more than seven days.",
+      type: new GraphQLNonNull(iso8601_datetime_type)
+    },
     before: {
       description:
-        "Optional exclusive upper time boundary as an ISO-8601 timestamp. Use the oldest returned action timestamp to request an earlier window.",
+        "Optional exclusive upper time boundary as an ISO-8601 timestamp. When omitted, the current time is used for window validation. Use the oldest returned action timestamp to page backward within the seven-day window.",
       type: iso8601_datetime_type
     },
     limit: {
@@ -53,6 +64,7 @@ export const get_actions = {
     args: {
       account: string;
       action: string;
+      after: string;
       before?: string;
       contract: string;
       limit: number;
@@ -60,10 +72,15 @@ export const get_actions = {
     context: Context,
     info: Parameters<Context["network"]>[2]
   ) {
+    const afterMs = dateTimeMs(args.after);
+    const beforeMs = args.before ? dateTimeMs(args.before) : Date.now();
+
     if (
       !Number.isInteger(args.limit) ||
       args.limit < 1 ||
-      args.limit > MAX_LIMIT
+      args.limit > MAX_LIMIT ||
+      afterMs >= beforeMs ||
+      beforeMs - afterMs > MAX_WINDOW_MS
     ) {
       throw new GraphQLError("Invalid Hyperion action search input.", {
         extensions: { code: "BAD_USER_INPUT" }
@@ -74,6 +91,7 @@ export const get_actions = {
     const hyperion = requireHyperionNetwork(network);
     const parameters: Record<string, string> = {
       account: args.account,
+      after: args.after,
       filter: `${args.contract}:${args.action}`,
       limit: String(args.limit),
       noBinary: "true",
