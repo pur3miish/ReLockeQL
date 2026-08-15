@@ -280,6 +280,40 @@ const result = await RelockeQL(
 );
 ```
 
+### Hyperion resource policy for block producers
+
+ReLockeQL history queries are read-only HTTP requests. They do not submit blockchain transactions or consume on-chain CPU, NET, or RAM. They do consume the selected provider's API capacity, outbound bandwidth, and Hyperion/Elasticsearch CPU and I/O.
+
+`get_actions` is intentionally narrower than the underlying Hyperion endpoint. A valid request produces one upstream request shaped like this:
+
+```text
+GET /v2/history/get_actions
+  ?account=<notified-account>
+  &filter=<contract>:<action>
+  &after=<ISO-8601-lower-bound>
+  &before=<optional-ISO-8601-upper-bound>
+  &limit=<1-25>
+  &sort=desc
+  &track=false
+  &noBinary=true
+```
+
+The library enforces the following provider protections before sending that request:
+
+- Notified account, contract, action, and lower time boundary are all required.
+- A request may cover no more than seven days.
+- The default result limit is 10 and the hard maximum is 25.
+- `track=false` prevents total-result counting.
+- `noBinary=true` excludes large binary action payloads.
+- Only newest-first ordering is available; ascending scans are not exposed.
+- Offset pagination, arbitrary indexed-field filters, and unbounded searches are not exposed.
+- The selected Hyperion provider receives one request with an eight-second timeout and no fallback request to another producer.
+- Returned actions are rejected unless they still match the requested notified account, contract, and action.
+
+`get_transaction_by_id` makes one exact transaction-ID lookup against the selected provider. It does not perform a broad action search or fall back to another endpoint.
+
+These controls bound the cost of an individual query; they cannot limit how many queries a public deployment receives. API operators should additionally apply per-user or per-credential rate limits, concurrency limits, short-lived deduplication for identical reads, and provider monitoring. Hyperion operators remain free to enforce stricter reverse-proxy limits and Elasticsearch query timeouts.
+
 ### Transfer Tokens
 
 ```js
