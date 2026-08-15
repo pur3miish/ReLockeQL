@@ -1,5 +1,48 @@
 # RelockeQL changelog
 
+## 5.0.0 - 2026-08-15
+
+### Breaking
+
+- Removed every built-in RPC endpoint and the `default_rpc_urls` export.
+- Made the `RelockeQL` `options` argument and its `chains` map required.
+- Only explicitly configured RPC chain keys now create top-level GraphQL chain fields.
+- Changed `get_block` transaction action `data` from `String` containing stringified JSON to the `relocke_json` scalar containing decoded JSON.
+
+### Added
+
+- Added separate Hyperion provider configuration through `hyperion_<chain>` keys, such as `hyperion_vaulta`.
+- Added `get_blockchain.get_transaction_by_id`, backed by `/v2/history/get_transaction` on the configured Hyperion provider.
+- Added `get_blockchain.get_token_transfers`, backed by bounded `/v2/history/get_actions` queries filtered by notified account and `contract:transfer`.
+- Added normalized Hyperion transactions, actions, authorization actors, receivers, and decoded JSON action data.
+- Added provider timeout, unavailable (including HTTP 404), malformed-response, missing-endpoint, transaction-ID mismatch, and confirmed not-found-envelope handling.
+- Added endpoint-configuration, Hyperion history, query-shape, limit, not-found, and JSON action-data tests.
+- Replaced live RPC calls in the unit suite with deterministic provider mocks.
+
+### Security and provider usage
+
+- Hyperion calls use one explicitly configured provider with no fallback.
+- Hyperion calls time out after eight seconds unless the caller supplies a request signal.
+- Token-transfer searches default to 25 results and reject limits above 100.
+- Token-transfer searches are always descending, `hot_only`, and `noBinary`; offset and ascending scans are not exposed.
+- Hyperion endpoint keys are excluded from the GraphQL chain catalog and cannot be mistaken for RPC chains.
+
+### Migration
+
+```js
+await RelockeQL(
+  { query },
+  {
+    chains: {
+      vaulta: "https://your-vaulta-rpc.example",
+      hyperion_vaulta: "https://your-vaulta-hyperion.example"
+    }
+  }
+);
+```
+
+Applications selecting `get_block` action `data` should remove `JSON.parse`; the field now returns the decoded value directly.
+
 ## 4.0.0 - 2026-08-07
 
 ### Breaking

@@ -9,6 +9,7 @@ import {
 
 import { authorization_type } from "../graphql_object_types/authorization.js";
 import { bytes_type } from "../relocke_types/bytes_type.js";
+import { json_type } from "../relocke_types/json_type.js";
 
 interface Action {
   account?: string;
@@ -25,9 +26,8 @@ const action_type = new GraphQLObjectType<Action>({
     name: { type: GraphQLString },
     authorization: { type: new GraphQLList(authorization_type) },
     data: {
-      type: GraphQLString,
-      description: "JSON representation of the transaction data.",
-      resolve: ({ data }) => JSON.stringify(data)
+      type: json_type,
+      description: "Decoded JSON representation of the transaction data."
     },
     hex_data: { type: bytes_type }
   })

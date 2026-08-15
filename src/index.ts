@@ -25,6 +25,7 @@ export { generate_checksum } from "./relocke_types/generate_checksum_type.js";
 export { generate_float_type } from "./relocke_types/generate_float_type.js";
 export { generate_int_type } from "./relocke_types/generate_int_type.js";
 export { generate_uint_type } from "./relocke_types/generate_uint_type.js";
+export { json_type } from "./relocke_types/json_type.js";
 export { Relocke_key_type } from "./relocke_types/key_type.js";
 export { name_type } from "./relocke_types/name_type.js";
 export { public_key_type } from "./relocke_types/public_key_type.js";
@@ -37,8 +38,8 @@ export { varint32_type } from "./relocke_types/varint32_type.js";
 export { varuint32_type } from "./relocke_types/varuint32_type.js";
 export {
   type APIOptionsType,
+  type ChainEndpointsType,
   type ContractsType,
-  default_rpc_urls,
   RelockeQL,
   type RelockeQLRequest,
   type RelockeQLResult

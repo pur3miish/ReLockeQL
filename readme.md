@@ -26,6 +26,28 @@ npm install relockeql graphql
 
 See the examples folder on how to run RelockeQL as a [Node.js](https://nodejs.org) endpoint.
 
+### Configure endpoints
+
+RelockeQL does not choose network providers. Every RPC endpoint must be supplied by the application in the required `chains` option:
+
+```js
+const endpoints = {
+  vaulta: "https://your-vaulta-rpc.example",
+  wax: "https://your-wax-rpc.example"
+};
+```
+
+Hyperion history endpoints are configured separately by prefixing the chain name with `hyperion_`. They do not create additional top-level GraphQL fields:
+
+```js
+const endpoints = {
+  vaulta: "https://your-vaulta-rpc.example",
+  hyperion_vaulta: "https://your-vaulta-hyperion.example"
+};
+```
+
+This explicit configuration prevents the package from silently sending requests to infrastructure that the application owner did not select.
+
 ### Serialize a contract ABI
 
 `serialize_abi` converts an Antelope ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Its self-contained encoder supports UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions without requiring an ABI serialization dependency.
@@ -71,7 +93,10 @@ const query = /* GraphQL */ `
   }
 `;
 
-const { data } = await RelockeQL({ query });
+const { data } = await RelockeQL(
+  { query },
+  { chains: { vaulta: "https://your-vaulta-rpc.example" } }
+);
 
 console.log(data);
 ```
@@ -102,18 +127,102 @@ const query = /* GraphQL */ `
   }
 `;
 
-const { data } = await RelockeQL({
-  query,
-  contracts: {
-    vaulta: ["eosio"]
+const { data } = await RelockeQL(
+  { query },
+  {
+    chains: { vaulta: "https://your-vaulta-rpc.example" },
+    contracts: {
+      vaulta: ["eosio"]
+    }
   }
-});
+);
 
 const page = data.vaulta.eosio.powup_order;
 
 if (page.more) {
   console.log("Next lower bound:", page.next_key);
 }
+```
+
+### Query a transaction through Hyperion
+
+`get_transaction_by_id` returns a normalized transaction and all of its actions. The action `data` field is decoded JSON, so callers do not need to parse a JSON string.
+
+```js
+const query = /* GraphQL */ `
+  {
+    vaulta {
+      get_blockchain {
+        get_transaction_by_id(
+          id: "690878b888dd70c339df268ae68019c097b1d4ded649a50c9b5723f734d84837"
+        ) {
+          transaction_id
+          block_num
+          timestamp
+          executed
+          actions {
+            contract
+            action
+            actors
+            receivers
+            data
+          }
+        }
+      }
+    }
+  }
+`;
+
+const result = await RelockeQL(
+  { query },
+  {
+    chains: {
+      vaulta: "https://your-vaulta-rpc.example",
+      hyperion_vaulta: "https://your-vaulta-hyperion.example"
+    }
+  }
+);
+```
+
+A Hyperion `executed: false` not-found response resolves to `null`. Missing, unavailable, timed-out, or malformed providers return GraphQL errors with specific `extensions.code` values.
+
+### Search recent token transfers
+
+`get_token_transfers` uses Hyperion's indexed notified-account and `contract:transfer` filters. It always requests newest-first results, omits large binary data, searches hot history partitions, and limits results to at most 100. Offset and ascending scans are intentionally unavailable.
+
+```js
+const query = /* GraphQL */ `
+  {
+    vaulta {
+      get_blockchain {
+        get_token_transfers(
+          account: "alice"
+          contract: "eosio.token"
+          before: "2026-08-15T10:00:00Z"
+          limit: 25
+        ) {
+          query_time_ms
+          actions {
+            transaction_id
+            block_num
+            timestamp
+            data
+          }
+        }
+      }
+    }
+  }
+`;
+
+const result = await RelockeQL(
+  { query },
+  {
+    chains: {
+      vaulta: "https://your-vaulta-rpc.example",
+      hyperion_vaulta: "https://your-vaulta-hyperion.example"
+    }
+  }
+);
 ```
 
 ### Transfer Tokens
@@ -146,18 +255,21 @@ const query = /* GraphQL */ `
   }
 `;
 
-const { data } = await RelockeQL({
-  query,
-  contracts: {
-    // List of your smart contracts accounts for each chains.
-    jungle: ["eosio.token"]
-  },
-  signTransaction: async (hash) => {
-    const wif_private_key = "PVT_K1_…"; // your private key
-    const signature = await sign_transaction({ hash, wif_private_key });
-    return [signature]; // signatures must return array
+const { data } = await RelockeQL(
+  { query },
+  {
+    chains: { jungle: "https://your-jungle-rpc.example" },
+    contracts: {
+      // List your smart contract accounts for each chain.
+      jungle: ["eosio.token"]
+    },
+    signTransaction: async (hash) => {
+      const wif_private_key = "PVT_K1_…"; // your private key
+      const signature = await sign_transaction({ hash, wif_private_key });
+      return [signature]; // signatures must return array
+    }
   }
-});
+);
 
 console.log(data);
 ```

@@ -44,6 +44,14 @@ export declare type ContractsType = {
 };
 
 /**
+ * RPC endpoints use their chain name. Hyperion history endpoints use the
+ * corresponding `hyperion_<chain>` key and never create a top-level schema.
+ */
+export declare type ChainEndpointsType = {
+  [endpoint_name: string]: URL | string | undefined;
+};
+
+/**
  * Enables you to enhance your GraphQL schema to add auxiliary queries and mnutation fields to your API.
  */
 declare type ExtendQueryType = {
@@ -58,8 +66,9 @@ declare type ExtendQueryType = {
 export declare type APIOptionsType = {
   signTransaction?: SignTransactionContext;
   contracts?: ContractsType;
-  chains?: { [chain_name in ChainsType]: URL | string };
+  chains: ChainEndpointsType;
   fetchOptions?: RequestInit;
+  hyperionFetchOptions?: RequestInit;
   abiFetchOptions?: RequestInit;
   extendQuery?: ExtendQueryType;
 };
@@ -69,37 +78,19 @@ export declare type RelockeQLResult = {
   errors?: ReadonlyArray<GraphQLError>;
 };
 
-const defaultChains = [
-  "vaulta",
-  "telos",
-  "xpr",
-  "wax",
-  "jungle"
-] as ChainsType[];
-
-export const default_rpc_urls = {
-  // Chain - aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906
-  vaulta: "https://eos.relocke.io",
-  // Chain - 4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11
-  telos: "https://telos.relocke.io",
-  // chain - 384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0
-  xpr: "https://proton.relocke.io",
-  // chain - 1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4
-  wax: "https://wax.relocke.io",
-  // Chain - 73e4385a2708e6d7048834fbc1079f2fabb17b3c125b146af438971e90716c4d
-  jungle: "https://jungle.relocke.io"
-} as { [chain in ChainsType]: string | URL };
-
 export async function RelockeQL(
   { query, variables, operationName }: RelockeQLRequest,
-  options?: APIOptionsType
+  options: APIOptionsType
 ): Promise<RelockeQLResult> {
-  const build_chains = new Set(defaultChains);
+  const chains = Object.entries(options?.chains ?? {})
+    .filter(([name, endpoint]) => !name.startsWith("hyperion_") && endpoint)
+    .map(([name]) => name as ChainsType);
 
-  if (options?.chains)
-    Object.keys(options?.chains).forEach((chain) => build_chains.add(chain));
-
-  const chains = [...build_chains];
+  if (!chains.length) {
+    throw new Error(
+      "RelockeQL requires at least one RPC endpoint in options.chains."
+    );
+  }
 
   const fields = {} as {
     [chain in ChainsType]: GraphQLFieldConfig<unknown, unknown, unknown>;
@@ -110,8 +101,8 @@ export async function RelockeQL(
   };
 
   for (const chain of chains) {
-    const rpc_url = options?.chains?.[chain] ?? default_rpc_urls[chain];
-    const contracts = options?.contracts?.[chain] ?? [];
+    const rpc_url = options.chains[chain]!;
+    const contracts = options.contracts?.[chain] ?? [];
 
     const typeResolution = chain.padStart(
       !chain.length ? 0 : chain.length + 1,
@@ -120,7 +111,7 @@ export async function RelockeQL(
 
     const abis = (await get_abis(contracts, {
       rpc_url,
-      fetchOptions: options?.abiFetchOptions
+      fetchOptions: options.abiFetchOptions
     })) as AbiResponse[];
 
     const T = abis.map((x) => ({
@@ -166,7 +157,7 @@ export async function RelockeQL(
                   serialize_transaction: serialize_transaction_type
                 };
 
-                if (options?.signTransaction) {
+                if (options.signTransaction) {
                   map.send_transaction = send_transaction(a, ast_list);
                 }
 
@@ -178,7 +169,7 @@ export async function RelockeQL(
     };
   }
 
-  const extended_query = options?.extendQuery?.query ?? {};
+  const extended_query = options.extendQuery?.query ?? {};
   const queries = new GraphQLObjectType({
     name: "Query",
     fields: {
@@ -186,7 +177,7 @@ export async function RelockeQL(
       ...extended_query
     }
   });
-  const extended_mutation = options?.extendQuery?.mutation ?? {};
+  const extended_mutation = options.extendQuery?.mutation ?? {};
 
   const mutations = new GraphQLObjectType({
     name: "Mutation",
@@ -213,13 +204,22 @@ export async function RelockeQL(
             : getFieldPath(path.prev, path);
 
         const chain = getFieldPath(info.path) as ChainsType;
-        const rpc_url = options?.chains?.[chain] ?? default_rpc_urls[chain];
+        const rpc_url = options.chains[chain];
 
-        return { rpc_url, fetchOptions: options?.fetchOptions };
+        if (!rpc_url) {
+          throw new Error(`No RPC endpoint configured for ${chain}.`);
+        }
+
+        return {
+          rpc_url,
+          hyperion_url: options.chains[`hyperion_${chain}`],
+          fetchOptions: options.fetchOptions,
+          hyperionFetchOptions: options.hyperionFetchOptions
+        };
       },
       async signTransaction(hash, serialized_transaction, transaction) {
-        if (options?.signTransaction)
-          return options?.signTransaction(
+        if (options.signTransaction)
+          return options.signTransaction(
             hash,
             serialized_transaction,
             transaction

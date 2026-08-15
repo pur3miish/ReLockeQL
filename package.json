@@ -1,6 +1,6 @@
 {
   "name": "relockeql",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "A GraphQL implementation for interacting with Relocke based blockchains.",
   "repository": {
     "type": "git",
@@ -47,7 +47,7 @@
     "eslint:fix": "eslint . --fix",
     "prettier": "prettier -c .",
     "prettier:fix": "prettier --write .",
-    "test:unit": "tsx ./node_modules/mocha/bin/mocha.js \"test/**/*.ts\"",
+    "test:unit": "node --import tsx ./node_modules/mocha/bin/mocha.js \"test/**/*.ts\"",
     "test": "npm run eslint && npm run prettier && npm run build && npm run test:unit",
     "server": "node test/server.js",
     "prepack": "npm run build",
@@ -70,7 +70,9 @@
     "eosio",
     "eos",
     "query",
-    "language"
+    "language",
+    "hyperion",
+    "history"
   ],
   "dependencies": {
     "base58-js": "^3.0.3",

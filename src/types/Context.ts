@@ -2,8 +2,10 @@
 import { GraphQLResolveInfo } from "graphql";
 
 export type NetworkContext = {
-  rpc_url: string;
+  rpc_url: string | URL | Request;
+  hyperion_url?: string | URL;
   fetchOptions?: RequestInit;
+  hyperionFetchOptions?: RequestInit;
 };
 export type SignTransactionContext = (
   hash: Uint8Array,

@@ -77,6 +77,7 @@ try {
     join(tempDir, "test.mjs"),
     `
 import {
+  json_type,
   public_key_type,
   serialize_abi,
 } from "relockeql";
@@ -94,6 +95,29 @@ if (typeof serialize_abi !== "function") {
 if (typeof RelockeQL !== "function") {
   throw new Error(
     "Deep export RelockeQL is unavailable"
+  );
+}
+
+if (json_type.name !== "relocke_json") {
+  throw new Error(
+    "JSON scalar export is unavailable"
+  );
+}
+
+const schemaResult = await RelockeQL(
+  {
+    query: "{ vaulta { __typename } }",
+  },
+  {
+    chains: {
+      vaulta: "https://rpc.example",
+    },
+  },
+);
+
+if (schemaResult.errors?.length) {
+  throw new Error(
+    "Required endpoint configuration failed"
   );
 }
 
@@ -156,6 +180,8 @@ if (
 
 console.log("✓ root package import works");
 console.log("✓ deep package import works");
+console.log("✓ explicit endpoint configuration works");
+console.log("✓ JSON scalar export works");
 console.log("✓ serialize_abi is synchronous");
 console.log("✓ RIPEMD-160 v4 key conversion works");
 console.log("✓ npm package smoke test passed");

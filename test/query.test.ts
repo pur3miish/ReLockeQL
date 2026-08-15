@@ -1,7 +1,18 @@
+import { strictEqual } from "assert";
+
 import { RelockeQL } from "../src/relockeql.js";
 
 describe("testing v1/chain/", () => {
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
   it("get_account", async () => {
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ account_name: "eosio" }));
+
     const query = /* GraphQL */ `
       {
         jungle {
@@ -36,8 +47,14 @@ describe("testing v1/chain/", () => {
       }
     `;
 
-    const { data } = await RelockeQL({ query });
+    const { data } = await RelockeQL(
+      { query },
+      { chains: { jungle: "https://jungle.relocke.io" } }
+    );
 
-    console.log(data);
+    strictEqual(
+      data?.jungle?.get_blockchain?.get_account?.account_name,
+      "eosio"
+    );
   });
 });
