@@ -14,6 +14,18 @@ With RelockeQL, developers can focus on building the frontend and business logic
 
 ![relockeql screenshot](https://raw.githubusercontent.com/pur3miish/RelockeQL/main/static/relockeql-screen.png)
 
+## Supported chains
+
+RelockeQL is tested with the following chains:
+
+- Jungle (`jungle`)
+- WAX (`wax`)
+- Vaulta (EOS) (`vaulta`)
+- Telos (`telos`)
+- XPR Network (`xpr`)
+
+Other Antelope-based chains may work when their RPC and, where required, Hyperion endpoints are explicitly configured. They have not been tested by this project and are not currently included in its compatibility guarantees.
+
 ## Installation
 
 For [Node.js](https://nodejs.org), to install [`RelockeQL`](https://npm.im/relockeql) and the peer dependency [`graphql`](https://npm.im/graphql) run:
