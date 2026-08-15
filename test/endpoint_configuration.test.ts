@@ -3,6 +3,12 @@ import { deepStrictEqual, ok, rejects, strictEqual } from "assert";
 import { type APIOptionsType, RelockeQL } from "../src/relockeql.js";
 
 describe("endpoint configuration", () => {
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
   it("requires callers to provide at least one RPC endpoint", async () => {
     await rejects(
       RelockeQL(
@@ -50,6 +56,47 @@ describe("endpoint configuration", () => {
       ),
       ["vaulta"]
     );
+  });
+
+  it("builds one schema for multiple chains with configured contract ABIs", async () => {
+    globalThis.fetch = async () =>
+      new Response(
+        JSON.stringify({
+          abi: {
+            actions: [
+              { name: "verify", ricardian_contract: "", type: "verify" }
+            ],
+            structs: [
+              {
+                base: "",
+                fields: [{ name: "hash", type: "checksum256" }],
+                name: "verify"
+              }
+            ],
+            tables: [],
+            types: [],
+            version: "eosio::abi/1.2"
+          },
+          account_name: "example"
+        })
+      );
+
+    const result = await RelockeQL(
+      { query: "{ __typename }" },
+      {
+        chains: {
+          vaulta: "https://vaulta.example",
+          wax: "https://wax.example"
+        },
+        contracts: {
+          vaulta: ["example"],
+          wax: ["example"]
+        }
+      }
+    );
+
+    strictEqual(result.errors, undefined);
+    strictEqual(result.data?.__typename, "Query");
   });
 
   it("documents public block and Hyperion schema types through introspection", async () => {

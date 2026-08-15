@@ -19,6 +19,7 @@
 - Updated the example HTTP server to accept all RPC and Hyperion providers through one required `RELOCKEQL_CHAINS` JSON map, return one JSON response per request, reject unsupported methods cleanly, and remain available after malformed requests.
 - Added an automatically loaded, Git-ignored `.env` workflow and a checked-in `.env.example` for local multi-chain server configuration.
 - Added provider timeout, unavailable (including HTTP 404), malformed-response, missing-endpoint, transaction-ID mismatch, and confirmed not-found-envelope handling.
+- Reused the canonical `checksum256` scalar for Hyperion transaction IDs so multiple chains with configured contract ABIs can coexist in one GraphQL schema.
 - Added endpoint-configuration, Hyperion history, query-shape, limit, not-found, and JSON action-data tests.
 - Replaced live RPC calls in the unit suite with deterministic provider mocks.
 

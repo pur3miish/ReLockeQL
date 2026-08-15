@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLNonNull } from "graphql";
 
-import { generate_checksum } from "../relocke_types/generate_checksum_type.js";
+import { relocke_types } from "../relocke_types.js";
 import type { Context } from "../types/Context.js";
 import {
   fetchHyperionJson,
@@ -24,8 +24,6 @@ type HyperionTransactionPayload = {
   trx_id?: unknown;
 };
 
-const transaction_id_type = generate_checksum(32);
-
 export const get_transaction_by_id = {
   description:
     "Retrieve one transaction and all of its actions from this chain's explicitly configured Hyperion endpoint. Returns null only when Hyperion confirms the transaction was not found; provider failures are returned as GraphQL errors.",
@@ -34,7 +32,7 @@ export const get_transaction_by_id = {
     id: {
       description:
         "The exact 64-character hexadecimal transaction ID to retrieve.",
-      type: new GraphQLNonNull(transaction_id_type)
+      type: new GraphQLNonNull(relocke_types.checksum256)
     }
   },
   async resolve(

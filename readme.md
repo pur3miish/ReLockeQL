@@ -64,7 +64,7 @@ This explicit configuration prevents the package from silently sending requests 
 
 The example server accepts the complete multi-chain endpoint map as JSON. Every configured RPC chain is exposed by the same GraphQL server, while matching `hyperion_<chain>` entries enable that chain's history queries. It does not contain fallback providers:
 
-Copy the environment template and replace its example URLs with providers you selected:
+Copy the environment template. It contains the tested ReLocke RPC providers and the EOSphere Vaulta Hyperion provider; you may replace or extend the map with providers you select:
 
 ```sh
 cp .env.example .env
@@ -80,14 +80,19 @@ You can alternatively provide the same configuration inline:
 
 ```sh
 RELOCKEQL_CHAINS='{
-  "vaulta": "https://your-vaulta-rpc.example",
-  "hyperion_vaulta": "https://your-vaulta-hyperion.example",
-  "wax": "https://your-wax-rpc.example",
-  "custom_chain": "https://your-custom-rpc.example"
+  "vaulta": "https://eos.relocke.io",
+  "hyperion_vaulta": "https://vaulta-hyperion.eosphere.io",
+  "telos": "https://telos.relocke.io",
+  "xpr": "https://proton.relocke.io",
+  "wax": "https://wax.relocke.io",
+  "jungle": "https://jungle.relocke.io"
 }' \
 RELOCKEQL_CONTRACTS='{
   "vaulta": ["eosio.token", "eosio"],
-  "wax": ["eosio.token"]
+  "telos": ["eosio.token"],
+  "xpr": ["eosio.token"],
+  "wax": ["eosio.token"],
+  "jungle": ["eosio.token"]
 }' \
 npm run server
 ```
