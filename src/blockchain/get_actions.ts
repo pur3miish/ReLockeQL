@@ -29,19 +29,22 @@ function isIsoTimestamp(value: string) {
   );
 }
 
-export const get_token_transfers = {
+export const get_actions = {
   description:
-    "Search recent eosio.token-compatible transfers involving an account through this chain's explicitly configured Hyperion endpoint. Results are newest-first and bounded to 100 actions without offset pagination.",
+    "List a bounded set of newest-first actions for one notified account, contract, and action name through this chain's explicitly configured Hyperion endpoint. Total-result counting, offset pagination, arbitrary indexed-field filters, and ascending scans are not exposed.",
   type: new GraphQLNonNull(hyperion_action_search_result_type),
   args: {
     account: {
       description:
-        "Account notified by the transfer, normally its sender or receiver.",
+        "Account notified while the requested contract action executed.",
       type: new GraphQLNonNull(name_type)
     },
     contract: {
-      description:
-        "Account hosting the eosio.token-compatible transfer action.",
+      description: "Account hosting the requested contract action.",
+      type: new GraphQLNonNull(name_type)
+    },
+    action: {
+      description: "Exact contract action name to list.",
       type: new GraphQLNonNull(name_type)
     },
     before: {
@@ -50,7 +53,7 @@ export const get_token_transfers = {
       type: GraphQLString
     },
     limit: {
-      description: `Number of recent transfers to return, from 1 through ${MAX_LIMIT}. Defaults to ${DEFAULT_LIMIT}.`,
+      description: `Number of recent actions to return, from 1 through ${MAX_LIMIT}. Defaults to ${DEFAULT_LIMIT}.`,
       type: GraphQLInt,
       defaultValue: DEFAULT_LIMIT
     }
@@ -59,6 +62,7 @@ export const get_token_transfers = {
     root: unknown,
     args: {
       account: string;
+      action: string;
       before?: string;
       contract: string;
       limit: number;
@@ -72,7 +76,7 @@ export const get_token_transfers = {
       args.limit > MAX_LIMIT ||
       (args.before !== undefined && !isIsoTimestamp(args.before))
     ) {
-      throw new GraphQLError("Invalid Hyperion token-transfer search input.", {
+      throw new GraphQLError("Invalid Hyperion action search input.", {
         extensions: { code: "BAD_USER_INPUT" }
       });
     }
@@ -81,10 +85,11 @@ export const get_token_transfers = {
     const hyperion = requireHyperionNetwork(network);
     const parameters: Record<string, string> = {
       account: args.account,
-      filter: `${args.contract}:transfer`,
+      filter: `${args.contract}:${args.action}`,
       limit: String(args.limit),
       noBinary: "true",
-      sort: "desc"
+      sort: "desc",
+      track: "false"
     };
 
     if (args.before) parameters.before = args.before;
@@ -102,8 +107,10 @@ export const get_token_transfers = {
     if (
       !actions ||
       actions.some(
-        ({ action, contract }) =>
-          action !== "transfer" || contract !== args.contract
+        ({ action, contract, receivers }) =>
+          action !== args.action ||
+          contract !== args.contract ||
+          !receivers.includes(args.account)
       )
     ) {
       throw new GraphQLError(

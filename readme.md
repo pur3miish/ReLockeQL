@@ -237,18 +237,19 @@ const result = await RelockeQL(
 
 A Hyperion `executed: false` not-found response resolves to `null`. Missing, unavailable, timed-out, or malformed providers return GraphQL errors with specific `extensions.code` values.
 
-### Search recent token transfers
+### List specific contract actions
 
-`get_token_transfers` uses Hyperion's indexed notified-account and `contract:transfer` filters. It always requests newest-first results, omits large binary data, and limits results to at most 100. It does not assume that a provider maintains Hyperion's optional hot-index alias. Offset and ascending scans are intentionally unavailable.
+`get_actions` requires a notified account, contract, and action name, which Hyperion combines as indexed account and `contract:action` filters. It always requests newest-first results, disables total-result counting, omits large binary data, and limits results to at most 100. It does not assume that a provider maintains Hyperion's optional hot-index alias. Offset, ascending scans, and arbitrary indexed-field filters are intentionally unavailable.
 
 ```js
 const query = /* GraphQL */ `
   {
     vaulta {
       get_blockchain {
-        get_token_transfers(
+        get_actions(
           account: "alice"
           contract: "eosio.token"
+          action: "transfer"
           before: "2026-08-15T10:00:00Z"
           limit: 25
         ) {

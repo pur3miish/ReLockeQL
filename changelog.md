@@ -13,7 +13,7 @@
 
 - Added separate Hyperion provider configuration through `hyperion_<chain>` keys, such as `hyperion_vaulta`.
 - Added `get_blockchain.get_transaction_by_id`, backed by `/v2/history/get_transaction` on the configured Hyperion provider.
-- Added `get_blockchain.get_token_transfers`, backed by bounded `/v2/history/get_actions` queries filtered by notified account and `contract:transfer`.
+- Added `get_blockchain.get_actions`, backed by bounded `/v2/history/get_actions` queries that require a notified account, contract, and action name.
 - Added normalized Hyperion transactions, actions, authorization actors, receivers, and decoded JSON action data.
 - Added introspectable descriptions for the chain entry points, Hyperion queries and result types, and nested `get_block` transaction and action fields.
 - Updated the example HTTP server to accept all RPC and Hyperion providers through one required `RELOCKEQL_CHAINS` JSON map, return one JSON response per request, reject unsupported methods cleanly, and remain available after malformed requests.
@@ -27,9 +27,9 @@
 
 - Hyperion calls use one explicitly configured provider with no fallback.
 - Hyperion calls time out after eight seconds unless the caller supplies a request signal.
-- Token-transfer searches default to 25 results and reject limits above 100.
-- Token-transfer searches are always descending, bounded, filtered by notified account and `contract:transfer`, and request `noBinary`; offset and ascending scans are not exposed.
-- Token-transfer searches do not send `hot_only`, because otherwise compatible providers without Hyperion's optional hot-index alias return `index_not_found_exception`.
+- Action searches default to 25 results and reject limits above 100.
+- Action searches are always descending, bounded, filtered by notified account and `contract:action`, request `noBinary`, and disable total-result tracking; offset, arbitrary indexed-field filters, and ascending scans are not exposed.
+- Action searches do not send `hot_only`, because otherwise compatible providers without Hyperion's optional hot-index alias return `index_not_found_exception`.
 - Hyperion endpoint keys are excluded from the GraphQL chain catalog and cannot be mistaken for RPC chains.
 
 ### Migration

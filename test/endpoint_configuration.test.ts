@@ -215,8 +215,14 @@ describe("endpoint configuration", () => {
       "blockchain_type"
     );
     assertDescription(result.data?.jsonType.description, "relocke_json");
+    strictEqual(
+      result.data?.blockchainType.fields.some(
+        ({ name }: { name: string }) => name === "get_token_transfers"
+      ),
+      false
+    );
 
-    ["get_block", "get_token_transfers", "get_transaction_by_id"].forEach(
+    ["get_actions", "get_block", "get_transaction_by_id"].forEach(
       (fieldName) => {
         const field = result.data?.blockchainType.fields.find(
           ({ name }: { name: string }) => name === fieldName

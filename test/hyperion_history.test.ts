@@ -92,7 +92,7 @@ describe("Hyperion history", () => {
     );
   });
 
-  it("searches bounded newest-first token transfers without offset or hot-index assumptions", async () => {
+  it("searches bounded newest-first actions using all required indexed selectors", async () => {
     let requestedUrl: URL | undefined;
 
     globalThis.fetch = async (input) => {
@@ -110,9 +110,10 @@ describe("Hyperion history", () => {
           {
             vaulta {
               get_blockchain {
-                get_token_transfers(
+                get_actions(
                   account: "alice"
                   contract: "eosio.token"
+                  action: "transfer"
                   before: "${before}"
                   limit: 10
                 ) {
@@ -145,11 +146,12 @@ describe("Hyperion history", () => {
     strictEqual(requestedUrl?.searchParams.get("before"), before);
     strictEqual(requestedUrl?.searchParams.get("limit"), "10");
     strictEqual(requestedUrl?.searchParams.get("sort"), "desc");
+    strictEqual(requestedUrl?.searchParams.get("track"), "false");
     strictEqual(requestedUrl?.searchParams.has("hot_only"), false);
     strictEqual(requestedUrl?.searchParams.get("noBinary"), "true");
     strictEqual(requestedUrl?.searchParams.has("skip"), false);
     deepStrictEqual(
-      result.data?.vaulta.get_blockchain.get_token_transfers.actions[0].data,
+      result.data?.vaulta.get_blockchain.get_actions.actions[0].data,
       action.act.data
     );
   });
@@ -290,7 +292,7 @@ describe("Hyperion history", () => {
     );
   });
 
-  it("defaults transfer searches to 25 results", async () => {
+  it("defaults action searches to 25 results", async () => {
     let requestedUrl: URL | undefined;
 
     globalThis.fetch = async (input) => {
@@ -304,7 +306,11 @@ describe("Hyperion history", () => {
           {
             vaulta {
               get_blockchain {
-                get_token_transfers(account: "alice", contract: "eosio.token") {
+                get_actions(
+                  account: "alice"
+                  contract: "eosio.token"
+                  action: "transfer"
+                ) {
                   actions {
                     transaction_id
                   }
@@ -324,6 +330,41 @@ describe("Hyperion history", () => {
 
     strictEqual(result.errors, undefined);
     strictEqual(requestedUrl?.searchParams.get("limit"), "25");
+  });
+
+  it("requires account, contract, and action before contacting Hyperion", async () => {
+    let fetchCalled = false;
+    globalThis.fetch = async () => {
+      fetchCalled = true;
+      return new Response("{}");
+    };
+
+    const result = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          {
+            vaulta {
+              get_blockchain {
+                get_actions(account: "alice", contract: "eosio.token") {
+                  actions {
+                    transaction_id
+                  }
+                }
+              }
+            }
+          }
+        `
+      },
+      {
+        chains: {
+          vaulta: "https://rpc.example",
+          hyperion_vaulta: "https://history.example"
+        }
+      }
+    );
+
+    strictEqual(fetchCalled, false);
+    match(result.errors?.[0].message ?? "", /argument "action".*required/iu);
   });
 
   it("reports HTTP failures instead of treating them as not-found transactions", async () => {
@@ -359,7 +400,7 @@ describe("Hyperion history", () => {
     strictEqual(result.errors?.[0].extensions?.status, 404);
   });
 
-  it("rejects actions that contradict the requested transfer filter", async () => {
+  it("rejects actions that contradict the requested indexed selectors", async () => {
     globalThis.fetch = async () =>
       new Response(
         JSON.stringify({
@@ -378,7 +419,11 @@ describe("Hyperion history", () => {
           {
             vaulta {
               get_blockchain {
-                get_token_transfers(account: "alice", contract: "eosio.token") {
+                get_actions(
+                  account: "alice"
+                  contract: "eosio.token"
+                  action: "transfer"
+                ) {
                   actions {
                     transaction_id
                   }
@@ -402,7 +447,7 @@ describe("Hyperion history", () => {
     );
   });
 
-  it("rejects excessive transfer limits before contacting Hyperion", async () => {
+  it("rejects excessive action limits before contacting Hyperion", async () => {
     let fetchCalled = false;
     globalThis.fetch = async () => {
       fetchCalled = true;
@@ -415,9 +460,10 @@ describe("Hyperion history", () => {
           {
             vaulta {
               get_blockchain {
-                get_token_transfers(
+                get_actions(
                   account: "alice"
                   contract: "eosio.token"
+                  action: "transfer"
                   limit: 101
                 ) {
                   actions {
