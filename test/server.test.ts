@@ -4,7 +4,7 @@ import { Readable } from "node:stream";
 import {
   createRelockeQLRequestHandler,
   readServerConfiguration
-} from "./server.js";
+} from "../examples/server.js";
 
 function request(method: string, body = "") {
   return Object.assign(Readable.from(body ? [Buffer.from(body)] : []), {

@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
@@ -36,7 +37,9 @@ try {
     "dist/index.js",
     "dist/index.d.ts",
     "dist/relockeql.js",
-    "dist/relockeql.d.ts"
+    "dist/relockeql.d.ts",
+    ".env.example",
+    "examples/server.js"
   ]) {
     if (!publishedFiles.includes(required)) {
       throw new Error(`${required} is missing from the npm package.`);
@@ -192,6 +195,28 @@ console.log("✓ npm package smoke test passed");
     cwd: tempDir,
     stdio: "inherit"
   });
+
+  const packagedServer = await import(
+    pathToFileURL(
+      join(tempDir, "node_modules", "relockeql", "examples", "server.js")
+    ).href
+  );
+  const serverConfiguration = packagedServer.readServerConfiguration({
+    RELOCKEQL_CHAINS: JSON.stringify({
+      vaulta: "https://rpc.example",
+      hyperion_vaulta: "https://history.example"
+    })
+  });
+
+  if (
+    serverConfiguration.options.chains.vaulta !== "https://rpc.example" ||
+    serverConfiguration.options.chains.hyperion_vaulta !==
+      "https://history.example"
+  ) {
+    throw new Error("Packaged example server configuration failed");
+  }
+
+  console.log("✓ packaged example server works");
 } finally {
   if (tempDir) {
     rmSync(tempDir, {

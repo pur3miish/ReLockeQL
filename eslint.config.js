@@ -12,7 +12,13 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
 
   {
-    files: ["src/**/*.ts", "test/**/*.ts", "test/**/*.js", "scripts/**/*.mjs"],
+    files: [
+      "src/**/*.ts",
+      "test/**/*.ts",
+      "test/**/*.js",
+      "scripts/**/*.mjs",
+      "examples/**/*.js"
+    ],
 
     languageOptions: {
       ecmaVersion: "latest",

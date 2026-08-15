@@ -19,6 +19,7 @@
 - Added the `iso8601_datetime` scalar and use it to validate action-history time boundaries supplied as literals or variables.
 - Updated the example HTTP server to accept all RPC and Hyperion providers through one required `RELOCKEQL_CHAINS` JSON map, return one JSON response per request, reject unsupported methods cleanly, and remain available after malformed requests.
 - Added an automatically loaded, Git-ignored `.env` workflow and a checked-in `.env.example` for local multi-chain server configuration.
+- Included the example HTTP server and `.env.example` in the npm package, and verify both during the publish smoke test.
 - Added provider timeout, unavailable (including HTTP 404), malformed-response, missing-endpoint, transaction-ID mismatch, and confirmed not-found-envelope handling.
 - Reused the canonical `checksum256` scalar for Hyperion transaction IDs so multiple chains with configured contract ABIs can coexist in one GraphQL schema.
 - Added endpoint-configuration, Hyperion history, query-shape, limit, not-found, and JSON action-data tests.
