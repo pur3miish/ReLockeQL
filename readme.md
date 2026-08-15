@@ -64,6 +64,20 @@ This explicit configuration prevents the package from silently sending requests 
 
 The example server accepts the complete multi-chain endpoint map as JSON. Every configured RPC chain is exposed by the same GraphQL server, while matching `hyperion_<chain>` entries enable that chain's history queries. It does not contain fallback providers:
 
+Copy the environment template and replace its example URLs with providers you selected:
+
+```sh
+cp .env.example .env
+```
+
+The `.env` file is ignored by Git. Once configured, start the server normally:
+
+```sh
+npm run server
+```
+
+You can alternatively provide the same configuration inline:
+
 ```sh
 RELOCKEQL_CHAINS='{
   "vaulta": "https://your-vaulta-rpc.example",
@@ -78,7 +92,7 @@ RELOCKEQL_CONTRACTS='{
 npm run server
 ```
 
-`RELOCKEQL_CHAINS` is required and may contain any number of tested or custom GraphQL-safe chain names. `RELOCKEQL_CONTRACTS` is an optional JSON map of chain names to contract account arrays. `PORT` defaults to `3002`. Send GraphQL requests as JSON over HTTP `POST`; browser `GET` requests return `405` without stopping the server.
+`RELOCKEQL_CHAINS` is required and may contain any number of tested or custom GraphQL-safe chain names. The server loads `.env` automatically when it exists, but still refuses to start without an explicit chain map. `RELOCKEQL_CONTRACTS` is an optional JSON map of chain names to contract account arrays. `PORT` defaults to `3002`. Send GraphQL requests as JSON over HTTP `POST`; browser `GET` requests return `405` without stopping the server.
 
 ### Serialize a contract ABI
 

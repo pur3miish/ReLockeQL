@@ -49,7 +49,7 @@
     "prettier:fix": "prettier --write .",
     "test:unit": "node --import tsx ./node_modules/mocha/bin/mocha.js \"test/**/*.ts\"",
     "test": "npm run eslint && npm run prettier && npm run build && npm run test:unit",
-    "server": "node test/server.js",
+    "server": "node --env-file-if-exists=.env test/server.js",
     "prepack": "npm run build",
     "smoke": "npm test && node scripts/smoke-test.mjs",
     "prepublishOnly": "npm run smoke"
