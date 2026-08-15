@@ -16,6 +16,7 @@
 - Added `get_blockchain.get_actions`, backed by bounded `/v2/history/get_actions` queries that require a notified account, contract, and action name.
 - Added normalized Hyperion transactions, actions, authorization actors, receivers, and decoded JSON action data.
 - Added introspectable descriptions for the chain entry points, Hyperion queries and result types, and nested `get_block` transaction and action fields.
+- Added the `iso8601_datetime` scalar and use it to validate action-history `before` boundaries supplied as literals or variables.
 - Updated the example HTTP server to accept all RPC and Hyperion providers through one required `RELOCKEQL_CHAINS` JSON map, return one JSON response per request, reject unsupported methods cleanly, and remain available after malformed requests.
 - Added an automatically loaded, Git-ignored `.env` workflow and a checked-in `.env.example` for local multi-chain server configuration.
 - Added provider timeout, unavailable (including HTTP 404), malformed-response, missing-endpoint, transaction-ID mismatch, and confirmed not-found-envelope handling.

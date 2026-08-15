@@ -160,6 +160,9 @@ describe("endpoint configuration", () => {
             jsonType: __type(name: "relocke_json") {
               description
             }
+            dateTimeType: __type(name: "iso8601_datetime") {
+              description
+            }
             ${typeQueries}
           }
         `
@@ -215,6 +218,10 @@ describe("endpoint configuration", () => {
       "blockchain_type"
     );
     assertDescription(result.data?.jsonType.description, "relocke_json");
+    assertDescription(
+      result.data?.dateTimeType.description,
+      "iso8601_datetime"
+    );
     strictEqual(
       result.data?.blockchainType.fields.some(
         ({ name }: { name: string }) => name === "get_token_transfers"

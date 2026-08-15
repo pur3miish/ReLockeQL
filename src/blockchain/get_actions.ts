@@ -1,10 +1,6 @@
-import {
-  GraphQLError,
-  GraphQLInt,
-  GraphQLNonNull,
-  GraphQLString
-} from "graphql";
+import { GraphQLError, GraphQLInt, GraphQLNonNull } from "graphql";
 
+import { iso8601_datetime_type } from "../relocke_types/iso8601_datetime_type.js";
 import { name_type } from "../relocke_types/name_type.js";
 import type { Context } from "../types/Context.js";
 import {
@@ -22,12 +18,6 @@ type HyperionActionsPayload = {
   actions?: unknown;
   query_time_ms?: unknown;
 };
-
-function isIsoTimestamp(value: string) {
-  return (
-    /^\d{4}-\d{2}-\d{2}T/u.test(value) && Number.isFinite(Date.parse(value))
-  );
-}
 
 export const get_actions = {
   description:
@@ -50,7 +40,7 @@ export const get_actions = {
     before: {
       description:
         "Optional exclusive upper time boundary as an ISO-8601 timestamp. Use the oldest returned action timestamp to request an earlier window.",
-      type: GraphQLString
+      type: iso8601_datetime_type
     },
     limit: {
       description: `Number of recent actions to return, from 1 through ${MAX_LIMIT}. Defaults to ${DEFAULT_LIMIT}.`,
@@ -73,8 +63,7 @@ export const get_actions = {
     if (
       !Number.isInteger(args.limit) ||
       args.limit < 1 ||
-      args.limit > MAX_LIMIT ||
-      (args.before !== undefined && !isIsoTimestamp(args.before))
+      args.limit > MAX_LIMIT
     ) {
       throw new GraphQLError("Invalid Hyperion action search input.", {
         extensions: { code: "BAD_USER_INPUT" }

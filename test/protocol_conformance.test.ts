@@ -5,6 +5,7 @@ import { block_timestamp_type } from "../src/relocke_types/block_timestamp_type.
 import { boolean_type } from "../src/relocke_types/boolean_type.js";
 import { generate_int_type } from "../src/relocke_types/generate_int_type.js";
 import { generate_uint_type } from "../src/relocke_types/generate_uint_type.js";
+import { iso8601_datetime_type } from "../src/relocke_types/iso8601_datetime_type.js";
 import { name_type } from "../src/relocke_types/name_type.js";
 
 describe("Antelope protocol conformance", () => {
@@ -151,6 +152,31 @@ describe("Antelope protocol conformance", () => {
 
     it("rejects malformed timestamps", () => {
       throws(() => block_timestamp_type.parseValue("not-a-timestamp"));
+    });
+  });
+
+  describe("iso8601_datetime", () => {
+    it("accepts Hyperion timestamps and explicit UTC offsets", () => {
+      [
+        "2026-08-15T10:00:00",
+        "2026-08-15T10:00:00.123",
+        "2026-08-15T10:00:00Z",
+        "2026-08-15T10:00:00.123456+07:00"
+      ].forEach((value) =>
+        equal(iso8601_datetime_type.parseValue(value), value)
+      );
+    });
+
+    it("rejects malformed and impossible calendar values", () => {
+      [
+        "2026-08-15",
+        "2026-02-29T10:00:00Z",
+        "2026-13-01T10:00:00Z",
+        "2026-08-15 10:00:00Z",
+        "tomorrow"
+      ].forEach((value) =>
+        throws(() => iso8601_datetime_type.parseValue(value))
+      );
     });
   });
 });

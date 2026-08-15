@@ -241,6 +241,8 @@ A Hyperion `executed: false` not-found response resolves to `null`. Missing, una
 
 `get_actions` requires a notified account, contract, and action name, which Hyperion combines as indexed account and `contract:action` filters. It always requests newest-first results, disables total-result counting, omits large binary data, and limits results to at most 100. It does not assume that a provider maintains Hyperion's optional hot-index alias. Offset, ascending scans, and arbitrary indexed-field filters are intentionally unavailable.
 
+The optional `before` boundary uses the `iso8601_datetime` GraphQL scalar rather than an unrestricted string. It accepts `YYYY-MM-DDTHH:mm:ss`, optional fractional seconds, and an optional `Z` or `±HH:mm` offset. Pass the oldest returned action timestamp as `before` to retrieve the next older window without offset pagination.
+
 ```js
 const query = /* GraphQL */ `
   {

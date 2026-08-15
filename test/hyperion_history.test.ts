@@ -367,6 +367,71 @@ describe("Hyperion history", () => {
     match(result.errors?.[0].message ?? "", /argument "action".*required/iu);
   });
 
+  it("enforces ISO-8601 before boundaries for literals and variables", async () => {
+    let fetchCalled = false;
+    globalThis.fetch = async () => {
+      fetchCalled = true;
+      return new Response("{}");
+    };
+    const options = {
+      chains: {
+        vaulta: "https://rpc.example",
+        hyperion_vaulta: "https://history.example"
+      }
+    };
+    const literalResult = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          {
+            vaulta {
+              get_blockchain {
+                get_actions(
+                  account: "alice"
+                  contract: "eosio.token"
+                  action: "transfer"
+                  before: "2026-02-29T10:00:00Z"
+                ) {
+                  actions {
+                    transaction_id
+                  }
+                }
+              }
+            }
+          }
+        `
+      },
+      options
+    );
+    const variableResult = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          query InvalidBoundary($before: iso8601_datetime) {
+            vaulta {
+              get_blockchain {
+                get_actions(
+                  account: "alice"
+                  contract: "eosio.token"
+                  action: "transfer"
+                  before: $before
+                ) {
+                  actions {
+                    transaction_id
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: { before: "not-a-date" }
+      },
+      options
+    );
+
+    strictEqual(fetchCalled, false);
+    match(literalResult.errors?.[0].message ?? "", /calendar value/iu);
+    match(variableResult.errors?.[0].message ?? "", /Date-time must use/iu);
+  });
+
   it("reports HTTP failures instead of treating them as not-found transactions", async () => {
     globalThis.fetch = async () =>
       new Response(JSON.stringify({ error: "Not Found" }), { status: 404 });
