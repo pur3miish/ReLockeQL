@@ -82,7 +82,6 @@ export const get_token_transfers = {
     const parameters: Record<string, string> = {
       account: args.account,
       filter: `${args.contract}:transfer`,
-      hot_only: "true",
       limit: String(args.limit),
       noBinary: "true",
       sort: "desc"

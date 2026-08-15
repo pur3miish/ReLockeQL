@@ -28,7 +28,8 @@
 - Hyperion calls use one explicitly configured provider with no fallback.
 - Hyperion calls time out after eight seconds unless the caller supplies a request signal.
 - Token-transfer searches default to 25 results and reject limits above 100.
-- Token-transfer searches are always descending, `hot_only`, and `noBinary`; offset and ascending scans are not exposed.
+- Token-transfer searches are always descending, bounded, filtered by notified account and `contract:transfer`, and request `noBinary`; offset and ascending scans are not exposed.
+- Token-transfer searches do not send `hot_only`, because otherwise compatible providers without Hyperion's optional hot-index alias return `index_not_found_exception`.
 - Hyperion endpoint keys are excluded from the GraphQL chain catalog and cannot be mistaken for RPC chains.
 
 ### Migration

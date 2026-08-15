@@ -239,7 +239,7 @@ A Hyperion `executed: false` not-found response resolves to `null`. Missing, una
 
 ### Search recent token transfers
 
-`get_token_transfers` uses Hyperion's indexed notified-account and `contract:transfer` filters. It always requests newest-first results, omits large binary data, searches hot history partitions, and limits results to at most 100. Offset and ascending scans are intentionally unavailable.
+`get_token_transfers` uses Hyperion's indexed notified-account and `contract:transfer` filters. It always requests newest-first results, omits large binary data, and limits results to at most 100. It does not assume that a provider maintains Hyperion's optional hot-index alias. Offset and ascending scans are intentionally unavailable.
 
 ```js
 const query = /* GraphQL */ `

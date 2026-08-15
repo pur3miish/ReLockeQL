@@ -92,7 +92,7 @@ describe("Hyperion history", () => {
     );
   });
 
-  it("searches bounded recent token transfers without offset or ascending scans", async () => {
+  it("searches bounded newest-first token transfers without offset or hot-index assumptions", async () => {
     let requestedUrl: URL | undefined;
 
     globalThis.fetch = async (input) => {
@@ -145,7 +145,7 @@ describe("Hyperion history", () => {
     strictEqual(requestedUrl?.searchParams.get("before"), before);
     strictEqual(requestedUrl?.searchParams.get("limit"), "10");
     strictEqual(requestedUrl?.searchParams.get("sort"), "desc");
-    strictEqual(requestedUrl?.searchParams.get("hot_only"), "true");
+    strictEqual(requestedUrl?.searchParams.has("hot_only"), false);
     strictEqual(requestedUrl?.searchParams.get("noBinary"), "true");
     strictEqual(requestedUrl?.searchParams.has("skip"), false);
     deepStrictEqual(
