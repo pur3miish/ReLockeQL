@@ -60,6 +60,20 @@ const endpoints = {
 
 This explicit configuration prevents the package from silently sending requests to infrastructure that the application owner did not select.
 
+### Run the example HTTP server
+
+The example server also requires an explicit chain and RPC endpoint. It does not contain fallback providers:
+
+```sh
+RELOCKEQL_CHAIN=vaulta \
+RELOCKEQL_RPC_URL=https://your-vaulta-rpc.example \
+RELOCKEQL_HYPERION_URL=https://your-vaulta-hyperion.example \
+RELOCKEQL_CONTRACTS=eosio.token,eosio \
+npm run server
+```
+
+`RELOCKEQL_HYPERION_URL` and `RELOCKEQL_CONTRACTS` are optional. `PORT` defaults to `3002`. Send GraphQL requests as JSON over HTTP `POST`; browser `GET` requests return `405` without stopping the server.
+
 ### Serialize a contract ABI
 
 `serialize_abi` converts an Antelope ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Its self-contained encoder supports UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions without requiring an ABI serialization dependency.
