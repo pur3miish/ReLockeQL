@@ -14,7 +14,7 @@ With RelockeQL, developers can focus on building the frontend and business logic
 
 ![relockeql screenshot](https://raw.githubusercontent.com/pur3miish/RelockeQL/main/static/relockeql-screen.png)
 
-## Supported chains
+## Tested chains
 
 RelockeQL is tested with the following chains:
 
@@ -24,7 +24,7 @@ RelockeQL is tested with the following chains:
 - Telos (`telos`)
 - XPR Network (`xpr`)
 
-Other Antelope-based chains may work when their RPC and, where required, Hyperion endpoints are explicitly configured. They have not been tested by this project and are not currently included in its compatibility guarantees.
+This list records test coverage; it is not an allowlist. Applications may configure any other Antelope-based chain using their own GraphQL-safe chain name and explicit RPC and, where required, Hyperion endpoints. Those custom chains are accepted by RelockeQL but have not been tested by this project.
 
 ## Installation
 
