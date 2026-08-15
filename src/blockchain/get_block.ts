@@ -21,15 +21,30 @@ interface Action {
 
 const action_type = new GraphQLObjectType<Action>({
   name: "action_type",
+  description: "A decoded action included in a block transaction.",
   fields: () => ({
-    account: { type: GraphQLString },
-    name: { type: GraphQLString },
-    authorization: { type: new GraphQLList(authorization_type) },
+    account: {
+      type: GraphQLString,
+      description: "Account hosting the contract that defines the action."
+    },
+    name: {
+      type: GraphQLString,
+      description: "Name of the contract action."
+    },
+    authorization: {
+      type: new GraphQLList(authorization_type),
+      description: "Account permissions that authorized the action."
+    },
     data: {
       type: json_type,
-      description: "Decoded JSON representation of the transaction data."
+      description:
+        "Decoded JSON action payload returned by the configured RPC provider."
     },
-    hex_data: { type: bytes_type }
+    hex_data: {
+      type: bytes_type,
+      description:
+        "ABI-encoded action payload represented as hexadecimal bytes."
+    }
   })
 });
 
@@ -40,8 +55,12 @@ interface Producer {
 
 const producer_type = new GraphQLObjectType<Producer>({
   name: "producer_type",
+  description: "A producer entry in a proposed producer schedule.",
   fields: () => ({
-    producer_name: { type: GraphQLString },
+    producer_name: {
+      type: GraphQLString,
+      description: "Account name of the block producer."
+    },
     block_signing_key: {
       type: GraphQLString,
       description: `Base58 encoded Relocke public key.`
@@ -56,9 +75,16 @@ interface NewProducer {
 
 const new_producer_type = new GraphQLObjectType<NewProducer>({
   name: "new_producer_type",
+  description: "A producer schedule proposed by this block, when present.",
   fields: () => ({
-    version: { type: GraphQLString },
-    producers: { type: new GraphQLList(producer_type) }
+    version: {
+      type: GraphQLString,
+      description: "Version number of the proposed producer schedule."
+    },
+    producers: {
+      type: new GraphQLList(producer_type),
+      description: "Producer entries in the proposed schedule."
+    }
   })
 });
 
@@ -75,15 +101,40 @@ interface PackedTransaction {
 
 const packed_transaction_type = new GraphQLObjectType<PackedTransaction>({
   name: "packed_transaction_type",
+  description: "The decoded transaction body embedded in a block receipt.",
   fields: () => ({
-    expiration: { type: GraphQLString },
-    ref_block_num: { type: GraphQLString },
-    ref_block_prefix: { type: GraphQLString },
-    max_net_usage_words: { type: GraphQLString },
-    max_cpu_usage_ms: { type: GraphQLString },
-    delay_sec: { type: GraphQLString },
-    context_free_actions: { type: new GraphQLList(action_type) },
-    actions: { type: new GraphQLList(action_type) }
+    expiration: {
+      type: GraphQLString,
+      description: "Time after which the transaction is no longer valid."
+    },
+    ref_block_num: {
+      type: GraphQLString,
+      description: "Lower 16 bits of the referenced block number."
+    },
+    ref_block_prefix: {
+      type: GraphQLString,
+      description: "32-bit prefix of the referenced block ID."
+    },
+    max_net_usage_words: {
+      type: GraphQLString,
+      description: "Maximum network usage allowed, in eight-byte words."
+    },
+    max_cpu_usage_ms: {
+      type: GraphQLString,
+      description: "Maximum CPU time allowed, in milliseconds."
+    },
+    delay_sec: {
+      type: GraphQLString,
+      description: "Requested delay before execution, in seconds."
+    },
+    context_free_actions: {
+      type: new GraphQLList(action_type),
+      description: "Actions that do not require authorization."
+    },
+    actions: {
+      type: new GraphQLList(action_type),
+      description: "Authorized actions executed by the transaction."
+    }
   })
 });
 
@@ -99,14 +150,38 @@ interface Trx {
 
 const trx_type = new GraphQLObjectType<Trx>({
   name: "trx_type",
+  description:
+    "A transaction ID or expanded transaction included in a block receipt.",
   fields: () => ({
-    id: { type: GraphQLID },
-    signatures: { type: new GraphQLList(GraphQLString) },
-    compression: { type: GraphQLString },
-    packed_context_free_data: { type: GraphQLString },
-    context_free_data: { type: new GraphQLList(GraphQLString) },
-    packed_trx: { type: GraphQLString },
-    transaction: { type: packed_transaction_type }
+    id: {
+      type: GraphQLID,
+      description: "Transaction ID when the receipt contains an ID reference."
+    },
+    signatures: {
+      type: new GraphQLList(GraphQLString),
+      description: "Cryptographic signatures attached to the transaction."
+    },
+    compression: {
+      type: GraphQLString,
+      description: "Compression mode used for packed transaction data."
+    },
+    packed_context_free_data: {
+      type: GraphQLString,
+      description: "Packed context-free data represented as hexadecimal bytes."
+    },
+    context_free_data: {
+      type: new GraphQLList(GraphQLString),
+      description: "Decoded context-free data entries."
+    },
+    packed_trx: {
+      type: GraphQLString,
+      description: "Packed transaction represented as hexadecimal bytes."
+    },
+    transaction: {
+      type: packed_transaction_type,
+      description:
+        "Expanded transaction body when returned by the RPC provider."
+    }
   })
 });
 
@@ -119,14 +194,24 @@ interface Transactions {
 
 const transactions_type = new GraphQLObjectType<Transactions>({
   name: "transaction_type",
+  description: "A transaction receipt included in a block.",
   fields: () => ({
     status: {
       type: GraphQLString,
-      description: "List of valid transaction receipts included in block."
+      description: "Execution status reported for the transaction."
     },
-    cpu_usage_us: { type: GraphQLString },
-    net_usage_words: { type: GraphQLString },
-    trx: { type: trx_type }
+    cpu_usage_us: {
+      type: GraphQLString,
+      description: "CPU consumed by the transaction, in microseconds."
+    },
+    net_usage_words: {
+      type: GraphQLString,
+      description: "Network bandwidth consumed, in eight-byte words."
+    },
+    trx: {
+      type: trx_type,
+      description: "Transaction ID or expanded transaction payload."
+    }
   })
 });
 
@@ -187,7 +272,8 @@ const block_type = new GraphQLObjectType<Block>({
       type: new_producer_type
     },
     header_extensions: {
-      type: new GraphQLList(GraphQLString)
+      type: new GraphQLList(GraphQLString),
+      description: "Protocol extensions attached to the block header."
     },
     producer_signature: {
       type: GraphQLString,
@@ -198,7 +284,8 @@ const block_type = new GraphQLObjectType<Block>({
       description: "List of valid transaction receipts included in block."
     },
     block_extensions: {
-      type: new GraphQLList(GraphQLString)
+      type: new GraphQLList(GraphQLString),
+      description: "Protocol extensions attached to the block."
     },
     id: {
       description: "The ID of the a given block `sha256`.",
@@ -229,6 +316,8 @@ export interface Context {
 }
 
 export const get_block = {
+  description:
+    "Retrieve one block by height or block ID from this chain's configured RPC endpoint.",
   type: block_type,
   args: {
     block_num_or_id: {

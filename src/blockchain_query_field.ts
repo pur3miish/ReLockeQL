@@ -16,9 +16,12 @@ import { get_token_transfers } from "./blockchain/get_token_transfers.js";
 import { get_transaction_by_id } from "./blockchain/get_transaction_by_id.js";
 
 export const blockchain_query_field: GraphQLFieldConfig<any, any> = {
+  description:
+    "Access chain RPC queries and Hyperion history queries for this network.",
   type: new GraphQLObjectType({
     name: "blockchain_type",
-    description: `Retrieve infomation about the blockchain, cryptocurrency and accounts.`,
+    description:
+      "Blockchain state, account, contract, transaction, and history queries.",
     fields: {
       get_account,
       get_abi,

@@ -31,23 +31,26 @@ function isIsoTimestamp(value: string) {
 
 export const get_token_transfers = {
   description:
-    "Search recent eosio.token-compatible transfers involving an account using bounded Hyperion action history.",
+    "Search recent eosio.token-compatible transfers involving an account through this chain's explicitly configured Hyperion endpoint. Results are newest-first and bounded to 100 actions without offset pagination.",
   type: new GraphQLNonNull(hyperion_action_search_result_type),
   args: {
     account: {
-      description: "The notified sender or receiver account.",
+      description:
+        "Account notified by the transfer, normally its sender or receiver.",
       type: new GraphQLNonNull(name_type)
     },
     contract: {
-      description: "The eosio.token-compatible contract account.",
+      description:
+        "Account hosting the eosio.token-compatible transfer action.",
       type: new GraphQLNonNull(name_type)
     },
     before: {
-      description: "Return transfers before this ISO-8601 timestamp.",
+      description:
+        "Optional exclusive upper time boundary as an ISO-8601 timestamp. Use the oldest returned action timestamp to request an earlier window.",
       type: GraphQLString
     },
     limit: {
-      description: `Number of recent transfers to return (1-${MAX_LIMIT}).`,
+      description: `Number of recent transfers to return, from 1 through ${MAX_LIMIT}. Defaults to ${DEFAULT_LIMIT}.`,
       type: GraphQLInt,
       defaultValue: DEFAULT_LIMIT
     }

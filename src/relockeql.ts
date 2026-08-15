@@ -123,8 +123,9 @@ export async function RelockeQL(
       build_graphql_fields_from_abis(T, typeResolution);
 
     fields[chain as ChainsType] = {
+      description: `Query ${chain} blockchain state, history, and configured smart contracts.`,
       type: new GraphQLObjectType({
-        description: `Query infomation about the ${chain} and smart contracts.`,
+        description: `Queries available for the ${chain} blockchain and its configured smart contracts.`,
         name: `${chain}_query`,
         fields: {
           get_blockchain: blockchain_query_field,
@@ -137,11 +138,12 @@ export async function RelockeQL(
     };
 
     mutationFields[chain as ChainsType] = {
+      description: `Build and submit transactions for the ${chain} blockchain.`,
       resolve() {
         return {};
       },
       type: new GraphQLObjectType({
-        description: `Serialise and update the smart contracts for ${chain}.`,
+        description: `Transaction serialization and submission operations for the ${chain} blockchain.`,
         name: chain + "_mutation",
         fields: {
           send_serialized_transaction,
@@ -172,6 +174,7 @@ export async function RelockeQL(
   const extended_query = options.extendQuery?.query ?? {};
   const queries = new GraphQLObjectType({
     name: "Query",
+    description: "Configured blockchain query entry points.",
     fields: {
       ...fields,
       ...extended_query
@@ -181,6 +184,7 @@ export async function RelockeQL(
 
   const mutations = new GraphQLObjectType({
     name: "Mutation",
+    description: "Configured blockchain transaction entry points.",
     fields: { ...mutationFields, ...extended_mutation }
   });
 

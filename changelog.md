@@ -15,6 +15,7 @@
 - Added `get_blockchain.get_transaction_by_id`, backed by `/v2/history/get_transaction` on the configured Hyperion provider.
 - Added `get_blockchain.get_token_transfers`, backed by bounded `/v2/history/get_actions` queries filtered by notified account and `contract:transfer`.
 - Added normalized Hyperion transactions, actions, authorization actors, receivers, and decoded JSON action data.
+- Added introspectable descriptions for the chain entry points, Hyperion queries and result types, and nested `get_block` transaction and action fields.
 - Added provider timeout, unavailable (including HTTP 404), malformed-response, missing-endpoint, transaction-ID mismatch, and confirmed not-found-envelope handling.
 - Added endpoint-configuration, Hyperion history, query-shape, limit, not-found, and JSON action-data tests.
 - Replaced live RPC calls in the unit suite with deterministic provider mocks.

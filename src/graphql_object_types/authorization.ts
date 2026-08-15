@@ -7,8 +7,15 @@ export interface AuthorizationType {
 
 export const authorization_type = new GraphQLObjectType<AuthorizationType>({
   name: "authorization_type",
+  description: "An account permission that authorized an action.",
   fields: (): Record<keyof AuthorizationType, any> => ({
-    actor: { type: GraphQLString },
-    permission: { type: GraphQLString }
+    actor: {
+      type: GraphQLString,
+      description: "Account that authorized the action."
+    },
+    permission: {
+      type: GraphQLString,
+      description: "Permission used by the authorizing account."
+    }
   })
 });

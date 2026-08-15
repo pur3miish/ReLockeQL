@@ -28,11 +28,12 @@ const transaction_id_type = generate_checksum(32);
 
 export const get_transaction_by_id = {
   description:
-    "Retrieve one transaction and all of its actions from the configured Hyperion endpoint.",
+    "Retrieve one transaction and all of its actions from this chain's explicitly configured Hyperion endpoint. Returns null only when Hyperion confirms the transaction was not found; provider failures are returned as GraphQL errors.",
   type: hyperion_transaction_type,
   args: {
     id: {
-      description: "The 64-character transaction ID.",
+      description:
+        "The exact 64-character hexadecimal transaction ID to retrieve.",
       type: new GraphQLNonNull(transaction_id_type)
     }
   },

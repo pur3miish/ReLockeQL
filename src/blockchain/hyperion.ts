@@ -238,37 +238,70 @@ export async function fetchHyperionJson(
 const hyperion_authorization_type =
   new GraphQLObjectType<HyperionAuthorization>({
     name: "hyperion_authorization_type",
+    description: "An account permission that authorized a Hyperion action.",
     fields: {
-      actor: { type: new GraphQLNonNull(GraphQLString) },
-      permission: { type: new GraphQLNonNull(GraphQLString) }
+      actor: {
+        type: new GraphQLNonNull(GraphQLString),
+        description: "Account that authorized the action."
+      },
+      permission: {
+        type: new GraphQLNonNull(GraphQLString),
+        description: "Permission used by the authorizing account."
+      }
     }
   });
 
 export const hyperion_action_type = new GraphQLObjectType<HyperionAction>({
   name: "hyperion_action_type",
+  description: "A normalized action returned by a Hyperion history provider.",
   fields: {
-    transaction_id: { type: new GraphQLNonNull(GraphQLString) },
-    block_num: { type: GraphQLInt },
-    timestamp: { type: GraphQLString },
-    global_sequence: { type: GraphQLString },
-    contract: { type: new GraphQLNonNull(GraphQLString) },
-    action: { type: new GraphQLNonNull(GraphQLString) },
+    transaction_id: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: "Transaction ID containing this action."
+    },
+    block_num: {
+      type: GraphQLInt,
+      description: "Block height containing this action, when indexed."
+    },
+    timestamp: {
+      type: GraphQLString,
+      description: "Block timestamp reported by Hyperion."
+    },
+    global_sequence: {
+      type: GraphQLString,
+      description:
+        "Chain-wide action sequence represented as a string to preserve 64-bit precision."
+    },
+    contract: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: "Account hosting the contract that emitted the action."
+    },
+    action: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: "Name of the contract action."
+    },
     authorization: {
       type: new GraphQLNonNull(
         new GraphQLList(new GraphQLNonNull(hyperion_authorization_type))
-      )
+      ),
+      description: "Account permissions that authorized the action."
     },
     actors: {
       type: new GraphQLNonNull(
         new GraphQLList(new GraphQLNonNull(GraphQLString))
-      )
+      ),
+      description: "Unique actor accounts derived from authorization entries."
     },
     receivers: {
       type: new GraphQLNonNull(
         new GraphQLList(new GraphQLNonNull(GraphQLString))
-      )
+      ),
+      description: "Accounts notified while the action executed."
     },
-    data: { type: json_type }
+    data: {
+      type: json_type,
+      description: "Decoded JSON action payload returned by Hyperion."
+    }
   }
 });
 
@@ -277,18 +310,46 @@ export const hyperion_transaction_type =
     name: "hyperion_transaction_type",
     description: "A transaction and its actions returned by Hyperion history.",
     fields: {
-      transaction_id: { type: new GraphQLNonNull(GraphQLString) },
-      block_num: { type: GraphQLInt },
-      timestamp: { type: GraphQLString },
-      executed: { type: GraphQLBoolean },
-      lib: { type: GraphQLInt },
-      last_indexed_block: { type: GraphQLInt },
-      last_indexed_block_time: { type: GraphQLString },
-      query_time_ms: { type: GraphQLFloat },
+      transaction_id: {
+        type: new GraphQLNonNull(GraphQLString),
+        description: "The 64-character transaction ID."
+      },
+      block_num: {
+        type: GraphQLInt,
+        description: "Block height containing the transaction, when indexed."
+      },
+      timestamp: {
+        type: GraphQLString,
+        description: "Block timestamp reported by Hyperion."
+      },
+      executed: {
+        type: GraphQLBoolean,
+        description: "Whether Hyperion reports that the transaction executed."
+      },
+      lib: {
+        type: GraphQLInt,
+        description:
+          "Last irreversible block reported by the Hyperion provider."
+      },
+      last_indexed_block: {
+        type: GraphQLInt,
+        description: "Most recent block indexed by the Hyperion provider."
+      },
+      last_indexed_block_time: {
+        type: GraphQLString,
+        description:
+          "Timestamp of the most recent block indexed by the Hyperion provider."
+      },
+      query_time_ms: {
+        type: GraphQLFloat,
+        description:
+          "Provider-reported execution time for the history query, in milliseconds."
+      },
       actions: {
         type: new GraphQLNonNull(
           new GraphQLList(new GraphQLNonNull(hyperion_action_type))
-        )
+        ),
+        description: "Normalized actions included in the transaction."
       }
     }
   });
@@ -298,12 +359,18 @@ export const hyperion_action_search_result_type = new GraphQLObjectType<{
   query_time_ms: number | null;
 }>({
   name: "hyperion_action_search_result_type",
+  description: "A bounded, newest-first Hyperion action-history result.",
   fields: {
-    query_time_ms: { type: GraphQLFloat },
+    query_time_ms: {
+      type: GraphQLFloat,
+      description:
+        "Provider-reported execution time for the history query, in milliseconds."
+    },
     actions: {
       type: new GraphQLNonNull(
         new GraphQLList(new GraphQLNonNull(hyperion_action_type))
-      )
+      ),
+      description: "Normalized actions matching the bounded history query."
     }
   }
 });
