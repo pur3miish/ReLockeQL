@@ -46,10 +46,76 @@ function response() {
 }
 
 describe("example HTTP server", () => {
-  it("requires callers to configure an explicit RPC endpoint", () => {
-    rejects(
-      async () => readServerConfiguration({ RELOCKEQL_CHAIN: "vaulta" }),
-      /RELOCKEQL_RPC_URL is required/u
+  it("requires callers to configure at least one explicit RPC endpoint", async () => {
+    await rejects(
+      async () => readServerConfiguration({}),
+      /RELOCKEQL_CHAINS is required/u
+    );
+
+    await rejects(
+      async () =>
+        readServerConfiguration({
+          RELOCKEQL_CHAINS: JSON.stringify({
+            hyperion_vaulta: "https://history.example"
+          })
+        }),
+      /at least one RPC chain endpoint/u
+    );
+  });
+
+  it("configures every RPC and Hyperion provider from one chain map", () => {
+    deepStrictEqual(
+      readServerConfiguration({
+        PORT: "4000",
+        RELOCKEQL_CHAINS: JSON.stringify({
+          custom_chain: "https://custom.example/",
+          hyperion_vaulta: "https://history.example/",
+          vaulta: "https://rpc.example/",
+          wax: "https://wax.example/"
+        }),
+        RELOCKEQL_CONTRACTS: JSON.stringify({
+          vaulta: [" eosio.token ", "eosio"]
+        })
+      }),
+      {
+        chains: ["custom_chain", "vaulta", "wax"],
+        options: {
+          chains: {
+            custom_chain: "https://custom.example",
+            hyperion_vaulta: "https://history.example",
+            vaulta: "https://rpc.example",
+            wax: "https://wax.example"
+          },
+          contracts: { vaulta: ["eosio.token", "eosio"] }
+        },
+        port: 4000
+      }
+    );
+  });
+
+  it("rejects invalid multi-chain configuration", async () => {
+    await rejects(
+      async () => readServerConfiguration({ RELOCKEQL_CHAINS: "not-json" }),
+      /must contain valid JSON/u
+    );
+    await rejects(
+      async () =>
+        readServerConfiguration({
+          RELOCKEQL_CHAINS: JSON.stringify({
+            "invalid-chain": "https://rpc.example"
+          })
+        }),
+      /valid GraphQL field name/u
+    );
+    await rejects(
+      async () =>
+        readServerConfiguration({
+          RELOCKEQL_CHAINS: JSON.stringify({
+            hyperion_wax: "https://history.example",
+            vaulta: "https://rpc.example"
+          })
+        }),
+      /matching wax RPC endpoint/u
     );
   });
 

@@ -62,17 +62,23 @@ This explicit configuration prevents the package from silently sending requests 
 
 ### Run the example HTTP server
 
-The example server also requires an explicit chain and RPC endpoint. It does not contain fallback providers:
+The example server accepts the complete multi-chain endpoint map as JSON. Every configured RPC chain is exposed by the same GraphQL server, while matching `hyperion_<chain>` entries enable that chain's history queries. It does not contain fallback providers:
 
 ```sh
-RELOCKEQL_CHAIN=vaulta \
-RELOCKEQL_RPC_URL=https://your-vaulta-rpc.example \
-RELOCKEQL_HYPERION_URL=https://your-vaulta-hyperion.example \
-RELOCKEQL_CONTRACTS=eosio.token,eosio \
+RELOCKEQL_CHAINS='{
+  "vaulta": "https://your-vaulta-rpc.example",
+  "hyperion_vaulta": "https://your-vaulta-hyperion.example",
+  "wax": "https://your-wax-rpc.example",
+  "custom_chain": "https://your-custom-rpc.example"
+}' \
+RELOCKEQL_CONTRACTS='{
+  "vaulta": ["eosio.token", "eosio"],
+  "wax": ["eosio.token"]
+}' \
 npm run server
 ```
 
-`RELOCKEQL_HYPERION_URL` and `RELOCKEQL_CONTRACTS` are optional. `PORT` defaults to `3002`. Send GraphQL requests as JSON over HTTP `POST`; browser `GET` requests return `405` without stopping the server.
+`RELOCKEQL_CHAINS` is required and may contain any number of tested or custom GraphQL-safe chain names. `RELOCKEQL_CONTRACTS` is an optional JSON map of chain names to contract account arrays. `PORT` defaults to `3002`. Send GraphQL requests as JSON over HTTP `POST`; browser `GET` requests return `405` without stopping the server.
 
 ### Serialize a contract ABI
 
