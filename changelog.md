@@ -1,5 +1,23 @@
 # RelockeQL changelog
 
+## 5.1.0 - 2026-08-16
+
+### Added
+
+- Added `abi_hash` and `wasm_hash` checksum fields to `get_blockchain.get_smart_contract`.
+- Added request-scoped promise caching for blockchain resolver calls through the optional exported `Context.requestCache` map.
+
+### Changed
+
+- Made smart-contract content and hash fields resolve lazily from only the RPC endpoints required by the active GraphQL selection.
+- Reuse `get_raw_code_and_abi` for selected WASM and ABI content, `get_raw_abi` for compatible ABI and hash selections, and `get_code_hash` for a standalone WASM hash.
+- Honor aliases, fragments, variables, `@skip`, and `@include` while planning smart-contract RPC calls.
+- Deduplicate identical smart-contract RPC calls within one GraphQL operation without caching blockchain data across operations.
+
+### Tests
+
+- Added endpoint-routing, selection-directive, error-propagation, request-deduplication, and cache-isolation coverage for smart-contract queries.
+
 ## 5.0.0 - 2026-08-15
 
 ### Breaking

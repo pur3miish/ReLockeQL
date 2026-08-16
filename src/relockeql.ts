@@ -199,6 +199,7 @@ export async function RelockeQL(
     document,
     rootValue: {},
     contextValue: {
+      requestCache: new Map<string, Promise<unknown>>(),
       network: (root: unknown, args: unknown, info: GraphQLResolveInfo) => {
         const getFieldPath = (path: ResponsePath, c?: ResponsePath): string =>
           !path.prev

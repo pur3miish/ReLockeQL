@@ -154,6 +154,32 @@ console.log(data);
 
 > Logged output included an account infomation.
 
+### Query smart contract code and hashes
+
+`get_smart_contract` resolves only the selected contract fields. For example, this query retrieves both deployment hashes with one raw-ABI RPC request and does not download the contract WASM:
+
+```js
+const query = /* GraphQL */ `
+  {
+    vaulta {
+      get_blockchain {
+        get_smart_contract(account_name: "rloc") {
+          abi_hash
+          wasm_hash
+        }
+      }
+    }
+  }
+`;
+
+const { data } = await RelockeQL(
+  { query },
+  { chains: { vaulta: "https://your-vaulta-rpc.example" } }
+);
+```
+
+The same field can select `wasm` and `abi` as base64-encoded content. A `wasm_hash`-only selection uses the dedicated code-hash endpoint, while compatible selections share in-flight RPC requests within the GraphQL operation.
+
 ### Query a Contract Table
 
 Contract table fields return the table rows together with the blockchain pagination metadata.

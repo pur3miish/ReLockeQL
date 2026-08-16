@@ -124,6 +124,32 @@ if (schemaResult.errors?.length) {
   );
 }
 
+const contractTypeResult = await RelockeQL(
+  {
+    query: '{ __type(name: "smart_contract_type") { fields { name type { name } } } }',
+  },
+  {
+    chains: {
+      vaulta: "https://rpc.example",
+    },
+  },
+);
+
+const contractFields = Object.fromEntries(
+  contractTypeResult.data.__type.fields.map(
+    ({ name, type }) => [name, type.name],
+  ),
+);
+
+if (
+  contractFields.abi_hash !== "checksum256" ||
+  contractFields.wasm_hash !== "checksum256"
+) {
+  throw new Error(
+    "Smart contract hash fields are unavailable"
+  );
+}
+
 const abi = {
   version: "eosio::abi/1.2",
   types: [],
@@ -184,6 +210,7 @@ if (
 console.log("✓ root package import works");
 console.log("✓ deep package import works");
 console.log("✓ explicit endpoint configuration works");
+console.log("✓ smart contract hash fields are packaged");
 console.log("✓ JSON scalar export works");
 console.log("✓ serialize_abi is synchronous");
 console.log("✓ RIPEMD-160 v4 key conversion works");

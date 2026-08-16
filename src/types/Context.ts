@@ -19,5 +19,6 @@ export type SignTransactionContext = (
 
 export type Context = {
   network(root: any, args: any, info: GraphQLResolveInfo): NetworkContext;
+  requestCache?: Map<string, Promise<unknown>>;
   signTransaction?: SignTransactionContext;
 };
