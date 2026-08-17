@@ -27,7 +27,7 @@ function dateTimeMs(value: string) {
 
 export const get_actions = {
   description:
-    "List a bounded set of newest-first actions for one notified account, contract, and action name through this chain's explicitly configured Hyperion endpoint. Searches require a lower time boundary, span at most seven days, and do not expose total-result counting, offset pagination, arbitrary indexed-field filters, or ascending scans.",
+    "List a bounded set of newest-first actions for one notified account, contract, and action name through this chain's explicitly configured Hyperion endpoint. Omit time boundaries to retrieve the latest actions, or provide an optional lower boundary for a window of at most seven days. Total-result counting, offset pagination, arbitrary indexed-field filters, and ascending scans are not exposed.",
   type: new GraphQLNonNull(hyperion_action_search_result_type),
   args: {
     account: {
@@ -45,12 +45,12 @@ export const get_actions = {
     },
     after: {
       description:
-        "Required exclusive lower time boundary as an ISO-8601 timestamp. The search window may span no more than seven days.",
-      type: new GraphQLNonNull(iso8601_datetime_type)
+        "Optional exclusive lower time boundary as an ISO-8601 timestamp. When supplied, the search window may span no more than seven days.",
+      type: iso8601_datetime_type
     },
     before: {
       description:
-        "Optional exclusive upper time boundary as an ISO-8601 timestamp. When omitted, the current time is used for window validation. Use the oldest returned action timestamp to page backward within the seven-day window.",
+        "Optional exclusive upper time boundary as an ISO-8601 timestamp. Omit both boundaries to retrieve the latest actions, then pass the oldest returned action timestamp as before to page backward. When after is supplied, the window may span no more than seven days.",
       type: iso8601_datetime_type
     },
     limit: {
@@ -64,7 +64,7 @@ export const get_actions = {
     args: {
       account: string;
       action: string;
-      after: string;
+      after?: string;
       before?: string;
       contract: string;
       limit: number;
@@ -72,15 +72,15 @@ export const get_actions = {
     context: Context,
     info: Parameters<Context["network"]>[2]
   ) {
-    const afterMs = dateTimeMs(args.after);
+    const afterMs = args.after ? dateTimeMs(args.after) : null;
     const beforeMs = args.before ? dateTimeMs(args.before) : Date.now();
 
     if (
       !Number.isInteger(args.limit) ||
       args.limit < 1 ||
       args.limit > MAX_LIMIT ||
-      afterMs >= beforeMs ||
-      beforeMs - afterMs > MAX_WINDOW_MS
+      (afterMs !== null &&
+        (afterMs >= beforeMs || beforeMs - afterMs > MAX_WINDOW_MS))
     ) {
       throw new GraphQLError("Invalid Hyperion action search input.", {
         extensions: { code: "BAD_USER_INPUT" }
@@ -91,7 +91,6 @@ export const get_actions = {
     const hyperion = requireHyperionNetwork(network);
     const parameters: Record<string, string> = {
       account: args.account,
-      after: args.after,
       filter: `${args.contract}:${args.action}`,
       limit: String(args.limit),
       noBinary: "true",
@@ -99,6 +98,7 @@ export const get_actions = {
       track: "false"
     };
 
+    if (args.after) parameters.after = args.after;
     if (args.before) parameters.before = args.before;
 
     const response = await fetchHyperionJson(

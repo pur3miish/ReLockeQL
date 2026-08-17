@@ -5,6 +5,10 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmEnvironment = { ...process.env };
+
+delete npmEnvironment.npm_config_dry_run;
+delete npmEnvironment.NPM_CONFIG_DRY_RUN;
 
 let tempDir;
 let tarball;
@@ -12,6 +16,7 @@ let tarball;
 try {
   const packOutput = execFileSync(npm, ["pack", "--json"], {
     encoding: "utf8",
+    env: npmEnvironment,
     stdio: ["ignore", "pipe", "inherit"]
   });
 
@@ -72,6 +77,7 @@ try {
     ],
     {
       cwd: tempDir,
+      env: npmEnvironment,
       stdio: "inherit"
     }
   );

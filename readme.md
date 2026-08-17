@@ -265,9 +265,33 @@ A Hyperion `executed: false` not-found response resolves to `null`. Missing, una
 
 ### List specific contract actions
 
-`get_actions` requires a notified account, contract, action name, and lower time boundary, which Hyperion combines as indexed account, `contract:action`, and time-range filters. Searches span at most seven days, request newest-first results, disable total-result counting, omit large binary data, default to 10 results, and return at most 25. It does not assume that a provider maintains Hyperion's optional hot-index alias. Offset, ascending scans, and arbitrary indexed-field filters are intentionally unavailable.
+`get_actions` requires a notified account, contract, and action name, which Hyperion combines as indexed account and `contract:action` filters. Omit both time boundaries to retrieve the latest matching actions. When `after` is supplied, the search window may span at most seven days. Searches request newest-first results, disable total-result counting, omit large binary data, default to 10 results, and return at most 25. They do not assume that a provider maintains Hyperion's optional hot-index alias. Offset, ascending scans, and arbitrary indexed-field filters are intentionally unavailable.
 
-The required `after` and optional `before` boundaries use the `iso8601_datetime` GraphQL scalar rather than unrestricted strings. It accepts `YYYY-MM-DDTHH:mm:ss`, optional fractional seconds, and an optional `Z` or `±HH:mm` offset. Keep `after` fixed and pass the oldest returned action timestamp as `before` to retrieve the next older page inside the bounded window. Query an earlier explicit seven-day window when that window is exhausted.
+The optional `after` and `before` boundaries use the `iso8601_datetime` GraphQL scalar rather than unrestricted strings. It accepts `YYYY-MM-DDTHH:mm:ss`, optional fractional seconds, and an optional `Z` or `±HH:mm` offset. For latest-action pagination, omit both boundaries on the first request and pass the oldest returned action timestamp as `before` on the next request. For explicit date-window pagination, keep `after` fixed and move `before` backward inside the seven-day window.
+
+```js
+const latestQuery = /* GraphQL */ `
+  {
+    vaulta {
+      get_blockchain {
+        get_actions(
+          account: "alice"
+          contract: "eosio.token"
+          action: "transfer"
+          limit: 10
+        ) {
+          actions {
+            transaction_id
+            block_num
+            timestamp
+            data
+          }
+        }
+      }
+    }
+  }
+`;
+```
 
 ```js
 const query = /* GraphQL */ `
@@ -316,7 +340,7 @@ ReLockeQL history queries are read-only HTTP requests. They do not submit blockc
 GET /v2/history/get_actions
   ?account=<notified-account>
   &filter=<contract>:<action>
-  &after=<ISO-8601-lower-bound>
+  &after=<optional-ISO-8601-lower-bound>
   &before=<optional-ISO-8601-upper-bound>
   &limit=<1-25>
   &sort=desc
@@ -326,13 +350,14 @@ GET /v2/history/get_actions
 
 The library enforces the following provider protections before sending that request:
 
-- Notified account, contract, action, and lower time boundary are all required.
-- A request may cover no more than seven days.
+- Notified account, contract, and action are required.
+- Omitting both time boundaries retrieves the latest matching actions.
+- When a lower time boundary is supplied, a request may cover no more than seven days.
 - The default result limit is 10 and the hard maximum is 25.
 - `track=false` prevents total-result counting.
 - `noBinary=true` excludes large binary action payloads.
 - Only newest-first ordering is available; ascending scans are not exposed.
-- Offset pagination, arbitrary indexed-field filters, and unbounded searches are not exposed.
+- Offset pagination, arbitrary indexed-field filters, and unbounded result counts are not exposed.
 - The selected Hyperion provider receives one request with an eight-second timeout and no fallback request to another producer.
 - Returned actions are rejected unless they still match the requested notified account, contract, and action.
 

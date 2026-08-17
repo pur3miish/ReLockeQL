@@ -159,6 +159,107 @@ describe("Hyperion history", () => {
     );
   });
 
+  it("searches the latest actions without a date boundary", async () => {
+    let requestedUrl: URL | undefined;
+
+    globalThis.fetch = async (input) => {
+      requestedUrl = new URL(input.toString());
+      return new Response(JSON.stringify({ actions: [action] }));
+    };
+
+    const result = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          {
+            vaulta {
+              get_blockchain {
+                get_actions(
+                  account: "alice"
+                  contract: "eosio.token"
+                  action: "transfer"
+                  limit: 1
+                ) {
+                  actions {
+                    transaction_id
+                    timestamp
+                  }
+                }
+              }
+            }
+          }
+        `
+      },
+      {
+        chains: {
+          vaulta: "https://rpc.example",
+          hyperion_vaulta: "https://history.example"
+        }
+      }
+    );
+
+    strictEqual(result.errors, undefined);
+    strictEqual(requestedUrl?.pathname, "/v2/history/get_actions");
+    strictEqual(requestedUrl?.searchParams.get("account"), "alice");
+    strictEqual(
+      requestedUrl?.searchParams.get("filter"),
+      "eosio.token:transfer"
+    );
+    strictEqual(requestedUrl?.searchParams.get("limit"), "1");
+    strictEqual(requestedUrl?.searchParams.get("sort"), "desc");
+    strictEqual(requestedUrl?.searchParams.get("track"), "false");
+    strictEqual(requestedUrl?.searchParams.get("noBinary"), "true");
+    strictEqual(requestedUrl?.searchParams.has("after"), false);
+    strictEqual(requestedUrl?.searchParams.has("before"), false);
+    strictEqual(requestedUrl?.searchParams.has("hot_only"), false);
+    strictEqual(requestedUrl?.searchParams.has("skip"), false);
+  });
+
+  it("pages latest-action searches backward with before and no after", async () => {
+    let requestedUrl: URL | undefined;
+
+    globalThis.fetch = async (input) => {
+      requestedUrl = new URL(input.toString());
+      return new Response(JSON.stringify({ actions: [] }));
+    };
+
+    const before = "2020-01-01T00:00:00Z";
+    const result = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          query LatestActionsPage($before: iso8601_datetime) {
+            vaulta {
+              get_blockchain {
+                get_actions(
+                  account: "alice"
+                  contract: "eosio.token"
+                  action: "transfer"
+                  before: $before
+                  limit: 25
+                ) {
+                  actions {
+                    transaction_id
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: { before }
+      },
+      {
+        chains: {
+          vaulta: "https://rpc.example",
+          hyperion_vaulta: "https://history.example"
+        }
+      }
+    );
+
+    strictEqual(result.errors, undefined);
+    strictEqual(requestedUrl?.searchParams.has("after"), false);
+    strictEqual(requestedUrl?.searchParams.get("before"), before);
+    strictEqual(requestedUrl?.searchParams.get("limit"), "25");
+  });
+
   it("rejects history queries when the chain has no Hyperion endpoint", async () => {
     let fetchCalled = false;
     globalThis.fetch = async () => {
@@ -337,7 +438,7 @@ describe("Hyperion history", () => {
     strictEqual(requestedUrl?.searchParams.get("limit"), "10");
   });
 
-  it("requires account, contract, action, and after before contacting Hyperion", async () => {
+  it("requires account, contract, and action before contacting Hyperion", async () => {
     let fetchCalled = false;
     globalThis.fetch = async () => {
       fetchCalled = true;
@@ -371,40 +472,8 @@ describe("Hyperion history", () => {
         }
       }
     );
-    const missingAfterResult = await RelockeQL(
-      {
-        query: /* GraphQL */ `
-          {
-            vaulta {
-              get_blockchain {
-                get_actions(
-                  account: "alice"
-                  contract: "eosio.token"
-                  action: "transfer"
-                ) {
-                  actions {
-                    transaction_id
-                  }
-                }
-              }
-            }
-          }
-        `
-      },
-      {
-        chains: {
-          vaulta: "https://rpc.example",
-          hyperion_vaulta: "https://history.example"
-        }
-      }
-    );
-
     strictEqual(fetchCalled, false);
     match(result.errors?.[0].message ?? "", /argument "action".*required/iu);
-    match(
-      missingAfterResult.errors?.[0].message ?? "",
-      /argument "after".*required/iu
-    );
   });
 
   it("enforces ISO-8601 time boundaries for literals and variables", async () => {

@@ -1,5 +1,20 @@
 # RelockeQL changelog
 
+## 5.2.0 - 2026-08-18
+
+### Added
+
+- Added latest-action mode to `get_blockchain.get_actions`: callers may omit both time boundaries to retrieve the newest matching actions and then use the oldest returned timestamp as `before` for backward pagination.
+
+### Changed
+
+- Made the `after` argument optional while preserving the required notified account, exact `contract:action` filter, newest-first ordering, 25-result maximum, disabled total-result counting, excluded binary payloads, response validation, provider timeout, and no-fallback policy.
+- Continue enforcing the seven-day maximum whenever callers supply an `after` boundary.
+
+### Tests
+
+- Added coverage for latest-action searches without `after` or `before` and retained bounded-window validation coverage.
+
 ## 5.1.0 - 2026-08-16
 
 ### Added
