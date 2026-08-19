@@ -248,64 +248,131 @@ interface MutationResolverResult {
   };
 }
 
+export interface MutationResolverSelection {
+  chainId?: boolean;
+  transactionBody?: boolean;
+  transactionHeader?: boolean;
+  transaction?: boolean;
+}
+
+type SelectedMutationResolverResult = {
+  chain_id?: MutationResolverResult["chain_id"];
+  transaction_header?: MutationResolverResult["transaction_header"];
+  transaction_body?: MutationResolverResult["transaction_body"];
+  transaction?: MutationResolverResult["transaction"];
+};
+
+type TransactionHeader = Omit<
+  MutationResolverResult["transaction"],
+  "context_free_actions" | "actions" | "transaction_extensions"
+>;
+
+const complete_transaction_selection: Required<MutationResolverSelection> = {
+  chainId: true,
+  transactionBody: true,
+  transactionHeader: true,
+  transaction: true
+};
+
+export function mutation_resolver(
+  args: MutationResolverArgs,
+  network: NetworkContext,
+  ast_list: ASTList
+): Promise<MutationResolverResult>;
+export function mutation_resolver(
+  args: MutationResolverArgs,
+  network: NetworkContext,
+  ast_list: ASTList,
+  selection: MutationResolverSelection
+): Promise<SelectedMutationResolverResult>;
+
 export async function mutation_resolver(
   { actions, configuration = default_config }: MutationResolverArgs,
   network: NetworkContext,
-  ast_list: ASTList
-): Promise<MutationResolverResult> {
-  if ((configuration.max_cpu_usage_ms ?? 0) > 0xff)
-    throw new Error("Invalid max_cpu_usage_ms value (maximum 255).");
-  if ((configuration.max_net_usage_words ?? 0) > 0xffffffff)
-    throw new Error(
-      "Invalid max_net_usage_words value (maximum 4,294,967,295)."
-    );
+  ast_list: ASTList,
+  selection: MutationResolverSelection = complete_transaction_selection
+): Promise<SelectedMutationResolverResult> {
+  const needsTransaction = selection.transaction ?? false;
+  const needsTransactionBody =
+    (selection.transactionBody ?? false) || needsTransaction;
+  const needsTransactionHeader =
+    (selection.transactionHeader ?? false) || needsTransaction;
+  const needsChainId = selection.chainId ?? false;
+
+  if (needsTransactionHeader) {
+    if ((configuration.max_cpu_usage_ms ?? 0) > 0xff)
+      throw new Error("Invalid max_cpu_usage_ms value (maximum 255).");
+    if ((configuration.max_net_usage_words ?? 0) > 0xffffffff)
+      throw new Error(
+        "Invalid max_net_usage_words value (maximum 4,294,967,295)."
+      );
+  }
 
   const { rpc_url, fetchOptions } = network;
-  const { transaction_body, ...transaction_list } = get_transaction_body(
-    actions,
-    ast_list
-  );
+  let transaction_body: string | undefined;
+  let transaction_list:
+    Omit<TransactionBodyResult, "transaction_body"> | undefined;
 
-  const response = await fetch(`${rpc_url}/v1/chain/get_info`, {
-    method: "POST",
-    ...fetchOptions
-  });
+  if (needsTransactionBody) {
+    const body = get_transaction_body(actions, ast_list);
+    ({ transaction_body, ...transaction_list } = body);
+  }
 
-  const { chain_id, head_block_num } =
-    (await response.json()) as GetInfoResponse;
-  const block_num_or_id = head_block_num - (configuration.blocksBehind ?? 3);
+  let chain_id: string | undefined;
+  let transaction_header: string | undefined;
+  let txn_header: TransactionHeader | undefined;
 
-  const blockResponse = await fetch(`${rpc_url}/v1/chain/get_block`, {
-    method: "POST",
-    ...fetchOptions,
-    body: JSON.stringify({ block_num_or_id })
-  });
+  if (needsChainId || needsTransactionHeader) {
+    const response = await fetch(`${rpc_url}/v1/chain/get_info`, {
+      method: "POST",
+      ...fetchOptions
+    });
 
-  const { timestamp, block_num, ref_block_prefix } = await blockResponse.json();
+    const info = (await response.json()) as GetInfoResponse;
+    chain_id = info.chain_id;
 
-  const expiration =
-    Math.round(Date.parse(timestamp + "Z") / 1000) +
-    (configuration.expireSeconds ?? 30);
+    if (needsTransactionHeader) {
+      const block_num_or_id =
+        info.head_block_num - (configuration.blocksBehind ?? 3);
 
-  const txn_header = {
-    expiration,
-    ref_block_num: block_num & 0xffff,
-    ref_block_prefix,
-    max_net_usage_words: configuration.max_net_usage_words ?? 0,
-    max_cpu_usage_ms: configuration.max_cpu_usage_ms ?? 0,
-    delay_sec: 0
-  };
+      const blockResponse = await fetch(`${rpc_url}/v1/chain/get_block`, {
+        method: "POST",
+        ...fetchOptions,
+        body: JSON.stringify({ block_num_or_id })
+      });
 
-  const transaction_header = serialize_transaction_header(txn_header);
-  txn_header.expiration = timestamp;
+      const { timestamp, block_num, ref_block_prefix } =
+        await blockResponse.json();
+
+      const expiration =
+        Math.round(Date.parse(timestamp + "Z") / 1000) +
+        (configuration.expireSeconds ?? 30);
+
+      const serializable_header = {
+        expiration,
+        ref_block_num: block_num & 0xffff,
+        ref_block_prefix,
+        max_net_usage_words: configuration.max_net_usage_words ?? 0,
+        max_cpu_usage_ms: configuration.max_cpu_usage_ms ?? 0,
+        delay_sec: 0
+      };
+
+      transaction_header = serialize_transaction_header(serializable_header);
+      txn_header = { ...serializable_header, expiration: timestamp };
+    }
+  }
 
   return {
-    chain_id,
-    transaction_header,
-    transaction_body,
-    transaction: {
-      ...txn_header,
-      ...transaction_list
-    }
+    ...(needsChainId ? { chain_id } : {}),
+    ...(selection.transactionHeader ? { transaction_header } : {}),
+    ...(selection.transactionBody ? { transaction_body } : {}),
+    ...(needsTransaction
+      ? {
+          transaction: {
+            ...txn_header!,
+            ...transaction_list!
+          }
+        }
+      : {})
   };
 }

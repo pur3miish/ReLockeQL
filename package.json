@@ -1,6 +1,6 @@
 {
   "name": "relockeql",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "A GraphQL implementation for interacting with Relocke based blockchains.",
   "repository": {
     "type": "git",

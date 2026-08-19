@@ -365,6 +365,35 @@ The library enforces the following provider protections before sending that requ
 
 These controls bound the cost of an individual query; they cannot limit how many queries a public deployment receives. API operators should additionally apply per-user or per-credential rate limits, concurrency limits, short-lived deduplication for identical reads, and provider monitoring. Hyperion operators remain free to enforce stricter reverse-proxy limits and Elasticsearch query timeouts.
 
+### Cache transaction bodies and refresh headers
+
+`serialize_transaction` only performs the work required by its selected output fields. A body-only selection serializes the actions without requesting current chain or reference-block data, so applications can cache the deterministic body while the actions, authorization, order, and contract ABI remain unchanged:
+
+```graphql
+mutation CacheTransactionBody {
+  wax {
+    serialize_transaction(actions: [...]) {
+      transaction_body
+    }
+  }
+}
+```
+
+When the cached body needs a fresh expiration and reference block, submit the same action input but select only the live values. ReLockeQL skips action serialization for this request:
+
+```graphql
+mutation RefreshTransactionHeader {
+  wax {
+    serialize_transaction(actions: [...]) {
+      chain_id
+      transaction_header
+    }
+  }
+}
+```
+
+Combine the refreshed `chain_id` and `transaction_header` with the cached `transaction_body`, then calculate a new signing hash. Selecting `hash` or non-empty `required_keys` automatically builds all of their required transaction components. ReLockeQL does not persist transaction bodies across GraphQL operations; applications control the cache lifetime and must invalidate entries when any serialized input or the contract ABI changes.
+
 ### Transfer Tokens
 
 ```js

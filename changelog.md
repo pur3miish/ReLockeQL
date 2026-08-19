@@ -1,5 +1,19 @@
 # RelockeQL changelog
 
+## 5.2.1 - 2026-08-19
+
+### Changed
+
+- Made `serialize_transaction` plan its work from the selected GraphQL fields. Body-only selections no longer fetch current chain or reference-block data, while header-only selections no longer serialize action data.
+- Fetch only `get_info` for a standalone `chain_id`; fetch a reference block only when a transaction header or complete transaction is required.
+- Preserve complete transaction construction for `hash`, non-empty `required_keys`, `send_transaction`, and direct `mutation_resolver()` callers.
+- Reuse the fragment-, alias-, and directive-aware field-selection planner across smart-contract and transaction resolvers.
+- Enable callers to cache deterministic `transaction_body` results separately from short-lived transaction headers without adding persistent or unbounded transaction state inside ReLockeQL.
+
+### Tests
+
+- Added regression coverage proving body-only serialization avoids live header RPC calls, header-only refreshes skip action serialization, aliases and selection directives are honored, and chain-ID-only requests avoid reference-block retrieval.
+
 ## 5.2.0 - 2026-08-18
 
 ### Added

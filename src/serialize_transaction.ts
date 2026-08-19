@@ -1,10 +1,11 @@
-import { GraphQLList, GraphQLNonNull } from "graphql";
+import { GraphQLList, GraphQLNonNull, type GraphQLResolveInfo } from "graphql";
 
 import { configuration_type } from "./graphql_input_types/configuration.js";
 import { packed_transaction_type } from "./graphql_object_types/packed_transaction.js";
 import { mutation_resolver } from "./mutation_resolver.js";
 import { public_key_type } from "./relocke_types/public_key_type.js";
 import { type Context } from "./types/Context.js";
+import { getSelectedFields } from "./utils/get_selected_fields.js";
 
 interface SerializeTransactionArgs {
   actions: any; // Replace `any` with the actual GraphQL type of `actions` if available
@@ -27,7 +28,7 @@ export const serialize_transaction = (
     root: any,
     args: SerializeTransactionArgs,
     context: Context,
-    info: any
+    info: GraphQLResolveInfo
   ) => Promise<any>;
 } => ({
   description: "Serialize a list of actions into an atomic binary instruction.",
@@ -44,6 +45,10 @@ export const serialize_transaction = (
     }
   },
   async resolve(root, { available_keys, ...args }, context, info) {
+    const selectedFields = getSelectedFields(info);
+    const needsHash = selectedFields.has("hash");
+    const needsRequiredKeys =
+      selectedFields.has("required_keys") && Boolean(available_keys?.length);
     const { rpc_url, fetchOptions } = context.network(
       root,
       { available_keys, ...args },
@@ -53,7 +58,14 @@ export const serialize_transaction = (
     const { transaction, ...serialized_txn } = await mutation_resolver(
       args,
       { rpc_url, fetchOptions },
-      ast_list
+      ast_list,
+      {
+        chainId: selectedFields.has("chain_id") || needsHash,
+        transactionBody: selectedFields.has("transaction_body") || needsHash,
+        transactionHeader:
+          selectedFields.has("transaction_header") || needsHash,
+        transaction: needsRequiredKeys
+      }
     );
 
     return { ...serialized_txn, available_keys, transaction };
