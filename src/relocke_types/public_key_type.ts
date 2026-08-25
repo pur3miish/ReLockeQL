@@ -59,10 +59,11 @@ export const public_key_type = new GraphQLScalarType({
       !value.startsWith("PUB_K1_") &&
       !value.startsWith("PUB_R1_") &&
       !value.startsWith("PUB_WA_") &&
-      !value.startsWith("EOS")
+      !value.startsWith("EOS") &&
+      !value.startsWith("SYS")
     ) {
       throw new GraphQLError(
-        "Public keys must be either K1, R1, WA or legacy keys."
+        "Public keys must be K1, R1, WA, or a supported legacy key."
       );
     }
 
@@ -74,7 +75,7 @@ export const public_key_type = new GraphQLScalarType({
       throw new GraphQLError("Public key must be a string");
     }
 
-    if (key.startsWith("EOS")) {
+    if (key.startsWith("EOS") || key.startsWith("SYS")) {
       return legacy_to_k1(key);
     }
 

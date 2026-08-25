@@ -195,6 +195,12 @@ const legacy =
 const modern =
   public_key_type.serialize(legacy);
 
+const wireLegacy =
+  "SYS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV";
+
+const wireModern =
+  public_key_type.serialize(wireLegacy);
+
 if (
   modern &&
   typeof modern.then === "function"
@@ -213,6 +219,15 @@ if (
   );
 }
 
+if (
+  wireModern !==
+  "PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63"
+) {
+  throw new Error(
+    "WIRE legacy public key conversion failed"
+  );
+}
+
 console.log("✓ root package import works");
 console.log("✓ deep package import works");
 console.log("✓ explicit endpoint configuration works");
@@ -220,6 +235,7 @@ console.log("✓ smart contract hash fields are packaged");
 console.log("✓ JSON scalar export works");
 console.log("✓ serialize_abi is synchronous");
 console.log("✓ RIPEMD-160 v4 key conversion works");
+console.log("✓ WIRE legacy public key conversion works");
 console.log("✓ npm package smoke test passed");
 `
   );

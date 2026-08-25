@@ -80,6 +80,20 @@ describe("Relocke types - validating parse values", () => {
       "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
     );
 
+    deepStrictEqual(
+      public_key.parseValue(
+        "SYS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      ),
+      "SYS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+    );
+
+    deepStrictEqual(
+      public_key.serialize(
+        "SYS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+      ),
+      "PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63"
+    );
+
     throws(() =>
       public_key.parseValue(
         "NOT_EOS_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW533"

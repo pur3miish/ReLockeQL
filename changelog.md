@@ -1,11 +1,19 @@
 # RelockeQL changelog
 
-## Unreleased
+## 5.3.0 - 2026-08-25
+
+### Added
+
+- Added WIRE Network (`wire`) to the documented supported chains and configuration examples.
+- Added support for WIRE's legacy `SYS` public-key prefix and normalize those keys to `PUB_K1` on output.
 
 ### Changed
 
-- Added WIRE Network to the documented supported chains and configuration examples.
-- Replaced ecosystem-specific protocol references with neutral EOSIO-compatible terminology.
+- Standardized ecosystem-specific protocol references on neutral EOSIO-compatible terminology.
+
+### Tests
+
+- Added coverage for configured WIRE chain schemas and legacy `SYS` public-key normalization.
 
 ## 5.2.1 - 2026-08-19
 
