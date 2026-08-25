@@ -92,7 +92,7 @@ function installRpcFixture(): {
   };
 }
 
-describe("Antelope transaction conformance", () => {
+describe("transaction conformance", () => {
   const originalFetch = globalThis.fetch;
 
   afterEach(() => {

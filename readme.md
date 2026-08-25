@@ -4,7 +4,7 @@
 
 [![NPM Package](https://img.shields.io/npm/v/relockeql.svg)](https://www.npmjs.org/package/relockeql) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pur3miish/RelockeQL/blob/main/LICENSE) [![CI](https://github.com/pur3miish/ReLockeQL/actions/workflows/node.js.yml/badge.svg)](https://github.com/pur3miish/ReLockeQL/actions/workflows/node.js.yml)
 
-RelockeQL is a GraphQL client and server library that allows developers to interact with Relocke-based blockchains (Antelope, EOSIO, WAX, TELOS, XPR, VAULTA) using GraphQL. It provides a unified interface to communicate with different chains in the ecosystem, enabling developers and agentic tools to leverage the unique features and capabilities of each blockchain while still benefiting from a consistent development experience.
+RelockeQL is a GraphQL client and server library that allows developers to interact with Relocke-based blockchains (EOSIO, WAX, Telos, XPR Network, Vaulta, and WIRE Network) using GraphQL. It provides a unified interface to communicate with different chains in the ecosystem, enabling developers and agentic tools to leverage the unique features and capabilities of each blockchain while still benefiting from a consistent development experience.
 
 As a GraphQL client library, RelockeQL simplifies the process of building and executing GraphQL queries and mutations, handling errors, and signing transactions. As a server library, it provides a framework for building GraphQL APIs that can interact with Relocke-based blockchains and other data sources.
 
@@ -14,17 +14,18 @@ With RelockeQL, developers can focus on building the frontend and business logic
 
 ![relockeql screenshot](https://raw.githubusercontent.com/pur3miish/RelockeQL/main/static/relockeql-screen.png)
 
-## Tested chains
+## Supported chains
 
-RelockeQL is tested with the following chains:
+RelockeQL supports the following chains:
 
 - Jungle (`jungle`)
 - WAX (`wax`)
 - Vaulta (EOS) (`vaulta`)
 - Telos (`telos`)
 - XPR Network (`xpr`)
+- WIRE Network (`wire`)
 
-This list records test coverage; it is not an allowlist. Applications may configure any other Antelope-based chain using their own GraphQL-safe chain name and explicit RPC and, where required, Hyperion endpoints. Those custom chains are accepted by RelockeQL but have not been tested by this project.
+This list is not an allowlist. Applications may configure any other compatible chain using their own GraphQL-safe chain name and explicit RPC and, where required, Hyperion endpoints.
 
 ## Installation
 
@@ -45,7 +46,8 @@ RelockeQL does not choose network providers. Every RPC endpoint must be supplied
 ```js
 const endpoints = {
   vaulta: "https://your-vaulta-rpc.example",
-  wax: "https://your-wax-rpc.example"
+  wax: "https://your-wax-rpc.example",
+  wire: "https://your-wire-rpc.example"
 };
 ```
 
@@ -101,7 +103,7 @@ npm run server
 
 ### Serialize a contract ABI
 
-`serialize_abi` converts an Antelope ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Its self-contained encoder supports UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions without requiring an ABI serialization dependency.
+`serialize_abi` converts an EOSIO-compatible ABI JSON document into the hexadecimal bytes required by `eosio::setabi`. Its self-contained encoder supports UTF-8 Ricardian text and ordered ABI 1.1/1.2 binary extensions without requiring an ABI serialization dependency.
 
 ```js
 import { serialize_abi } from "relockeql";
@@ -120,7 +122,7 @@ const rawAbi = serialize_abi({
 });
 ```
 
-Trailing binary-extension fields remain absent unless supplied. If `action_results` is present, `variants` must also be present because Antelope binary extensions cannot skip an earlier field and then encode a later one.
+Trailing binary-extension fields remain absent unless supplied. If `action_results` is present, `variants` must also be present because ABI binary extensions cannot skip an earlier field and then encode a later one.
 
 ### Query a Blockchain Account Info
 

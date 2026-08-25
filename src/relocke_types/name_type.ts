@@ -1,9 +1,9 @@
 import { GraphQLError, GraphQLScalarType } from "graphql";
 
 /**
- * Antelope account/name scalar.
+ * EOSIO-compatible account/name scalar.
  *
- * Antelope names contain at most 13 characters.
+ * Protocol names contain at most 13 characters.
  *
  * Characters 1-12:
  *   . 1-5 a-z
@@ -20,7 +20,7 @@ export const name_type = new GraphQLScalarType({
   description: `
 \`Name type\`
 
-Names are identifiers encoded into Antelope's 64-bit \`name\` representation.
+Names are identifiers encoded into the protocol's 64-bit \`name\` representation.
 
 ### Name rules
 

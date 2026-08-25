@@ -73,21 +73,21 @@ export interface AbiDef {
   abi_extensions?: AbiExtensionsInput[];
 
   /**
-   * Trailing Antelope ABI binary extension.
+   * Trailing ABI binary extension.
    *
    * When omitted, no bytes are written for this field.
    */
   variants?: AbiVariantDef[];
 
   /**
-   * Trailing Antelope ABI binary extension.
+   * Trailing ABI binary extension.
    *
    * `variants` must exist before this field can be encoded.
    */
   action_results?: AbiActionResultDef[];
 
   /**
-   * Not part of the current Antelope Spring abi_def layout.
+   * Not part of the current EOSIO-compatible abi_def layout.
    *
    * Retained here only so callers receive an explicit error rather
    * than having the value silently ignored.
@@ -120,8 +120,7 @@ function bytes_to_hex(bytes: Uint8Array): string {
 }
 
 /**
- * Serializes a JavaScript string using Antelope's
- * string representation:
+ * Serializes a JavaScript string using the protocol's string representation:
  *
  * varuint32 UTF-8 byte length + UTF-8 bytes.
  *
@@ -250,13 +249,13 @@ function assert_binary_extension_order(abi: AbiDef): void {
 
   if (abi.kv_tables !== undefined) {
     throw new Error(
-      "abi_def.kv_tables is not part of the current Antelope Spring abi_def binary layout."
+      "abi_def.kv_tables is not part of the current EOSIO-compatible abi_def binary layout."
     );
   }
 }
 
 /**
- * Serializes an Antelope abi_def into the hexadecimal
+ * Serializes an EOSIO-compatible abi_def into the hexadecimal
  * bytes accepted by eosio::setabi.
  *
  * Binary layout:
@@ -304,7 +303,7 @@ export function serialize_abi(abi: AbiDef): string {
 
   /*
    * These are `may_not_exist` trailing fields in
-   * Antelope's abi_def.
+   * the protocol's abi_def.
    *
    * Undefined means no bytes are written.
    *

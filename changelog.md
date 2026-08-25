@@ -1,5 +1,12 @@
 # RelockeQL changelog
 
+## Unreleased
+
+### Changed
+
+- Added WIRE Network to the documented supported chains and configuration examples.
+- Replaced ecosystem-specific protocol references with neutral EOSIO-compatible terminology.
+
 ## 5.2.1 - 2026-08-19
 
 ### Changed
@@ -117,10 +124,10 @@ Applications selecting `get_block` action `data` should remove `JSON.parse`; the
 
 ### Changed
 
-- Replaced EOSJS ABI serialization with ReLockeQL's own Antelope `abi_def` binary encoder.
+- Replaced EOSJS ABI serialization with ReLockeQL's own `abi_def` binary encoder.
 - Preserved UTF-8 byte lengths for Ricardian contracts and clauses.
 - - Preserved ordered trailing ABI binary extensions for `variants` and `action_results`.
-- Explicitly reject `kv_tables`, which is not part of the current Antelope Spring `abi_def` binary layout.
+- Explicitly reject `kv_tables`, which is not part of the current EOSIO-compatible `abi_def` binary layout.
 - Migrated RIPEMD-160 usage to the synchronous `ripemd160-js` v4 API.
 - Migrated local `eosio-wasm-js` transaction serialization to its synchronous v6 APIs.
 - Updated TypeScript to v6.
@@ -141,24 +148,24 @@ Applications selecting `get_block` action `data` should remove `JSON.parse`; the
 - Added detection of circular typedef references.
 - Added detection of circular struct inheritance.
 - Added duplicate definition checks for ABI types, structs, actions, tables, error messages, variants, and action results.
-- Added validation that action, table, variant, typedef, and action-result types resolve to valid Antelope built-in types, structs, typedefs, or variants.
+- Added validation that action, table, variant, typedef, and action-result types resolve to valid ABI built-in types, structs, typedefs, or variants.
 - Added validation for unknown struct base types.
-- Added support for validating Antelope type modifiers including dynamic arrays (`[]`), fixed-size arrays (`[N]`), optionals (`?`), and binary-extension fields (`$`).
+- Added support for validating ABI type modifiers including dynamic arrays (`[]`), fixed-size arrays (`[N]`), optionals (`?`), and binary-extension fields (`$`).
 - Separated ABI semantic validation from ABI binary encoding through the new `validate_abi()` validation stage.
 
 ### Protocol conformance
 
-- Expanded protocol conformance coverage using behavioral cases derived from Antelope Spring and eosjs test suites without adding eosjs as a dependency.
+- Expanded protocol conformance coverage using behavioral cases derived from reference implementation and eosjs test suites without adding eosjs as a dependency.
 - Added boundary tests for signed and unsigned 64-bit and 128-bit integer scalar types.
-- Corrected Antelope `name` validation to support valid 13-character names with the protocol-defined restricted 13th-character alphabet.
+- Corrected protocol `name` validation to support valid 13-character names with the protocol-defined restricted 13th-character alphabet.
 - Added tests for invalid 13th-character names, oversized names, invalid characters, and non-normalized trailing periods.
 - Added asset symbol validation coverage for valid 1-7 character symbols and invalid lowercase, oversized, missing, and malformed symbols.
 - Added boolean scalar coverage for protocol-supported `true`, `false`, `0`, and `1` values.
-- Added Antelope block timestamp validation coverage.
+- Added protocol block timestamp validation coverage.
 
 ### Transaction serialization
 
-- Added deterministic transaction serialization conformance tests using known Antelope/eosjs-compatible transfer fixtures.
+- Added deterministic transaction serialization conformance tests using known eosjs-compatible transfer fixtures.
 - Added exact action-data byte assertions for token transfer actions.
 - Added deterministic TAPOS and transaction-header serialization coverage.
 - Added multi-action ordering tests.

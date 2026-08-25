@@ -8,11 +8,11 @@ import { generate_uint_type } from "../src/relocke_types/generate_uint_type.js";
 import { iso8601_datetime_type } from "../src/relocke_types/iso8601_datetime_type.js";
 import { name_type } from "../src/relocke_types/name_type.js";
 
-describe("Antelope protocol conformance", () => {
+describe("protocol conformance", () => {
   describe("name", () => {
-    it("accepts a valid 13-character Antelope name", () => {
+    it("accepts a valid 13-character protocol name", () => {
       /*
-       * Antelope name supports up to 13 characters.
+       * Protocol names support up to 13 characters.
        * The 13th character has a restricted character set.
        *
        * This is based on the same canonical edge case used
@@ -144,7 +144,7 @@ describe("Antelope protocol conformance", () => {
   });
 
   describe("block_timestamp_type", () => {
-    it("accepts the Antelope epoch timestamp", () => {
+    it("accepts the protocol epoch timestamp", () => {
       const value = "2000-01-01T00:00:00.000";
 
       equal(block_timestamp_type.parseValue(value), value);

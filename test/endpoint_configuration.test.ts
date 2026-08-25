@@ -58,6 +58,32 @@ describe("endpoint configuration", () => {
     );
   });
 
+  it("exposes WIRE Network through a configured wire RPC key", async () => {
+    const result = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          {
+            __schema {
+              queryType {
+                fields {
+                  name
+                }
+              }
+            }
+          }
+        `
+      },
+      { chains: { wire: "https://wire.example" } }
+    );
+
+    deepStrictEqual(
+      result.data?.__schema.queryType.fields.map(
+        ({ name }: { name: string }) => name
+      ),
+      ["wire"]
+    );
+  });
+
   it("builds one schema for multiple chains with configured contract ABIs", async () => {
     globalThis.fetch = async () =>
       new Response(

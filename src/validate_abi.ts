@@ -66,16 +66,15 @@ function assert_unique<T>(
 }
 
 /**
- * Returns the underlying type for one Antelope ABI
- * type modifier.
+ * Returns the underlying type for one ABI type modifier.
  *
- * This intentionally mirrors Spring's fundamental_type():
+ * This intentionally mirrors the reference implementation's fundamental_type():
  *
  * uint64[]  -> uint64
  * uint64[4] -> uint64
  * uint64?   -> uint64
  *
- * Only one modifier is removed at a time, matching Spring.
+ * Only one modifier is removed at a time, matching the reference implementation.
  */
 function fundamental_type(type: string): string {
   if (type.endsWith("[]")) {
@@ -284,10 +283,10 @@ function assert_structs_are_valid(
 }
 
 /**
- * Validates the semantic type graph of an Antelope ABI.
+ * Validates the semantic type graph of an EOSIO-compatible ABI.
  *
  * This corresponds to the validation performed by
- * Antelope Spring's abi_serializer::set_abi() and
+ * the reference implementation's abi_serializer::set_abi() and
  * abi_serializer::validate().
  *
  * It intentionally does not serialize or mutate the ABI.
@@ -308,7 +307,7 @@ export function validate_abi(abi: AbiDef): void {
   const action_result_list = abi.action_results ?? [];
 
   /*
-   * Spring loads structs before typedefs.
+   * The reference implementation loads structs before typedefs.
    */
   const structs = assert_unique(struct_list, ({ name }) => name, "struct");
 
