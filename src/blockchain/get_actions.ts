@@ -27,12 +27,12 @@ function dateTimeMs(value: string) {
 
 export const get_actions = {
   description:
-    "List a bounded set of newest-first actions for one notified account, contract, and action name through this chain's explicitly configured Hyperion endpoint. Omit time boundaries to retrieve the latest actions, or provide an optional lower boundary for a window of at most seven days. Total-result counting, offset pagination, arbitrary indexed-field filters, and ascending scans are not exposed.",
+    "List a bounded set of newest-first actions for one notified or authorizing account, contract, and action name through this chain's explicitly configured Hyperion endpoint. Omit time boundaries to retrieve the latest actions, or provide an optional lower boundary for a window of at most seven days. Total-result counting, offset pagination, arbitrary indexed-field filters, and ascending scans are not exposed.",
   type: new GraphQLNonNull(hyperion_action_search_result_type),
   args: {
     account: {
       description:
-        "Account notified while the requested contract action executed.",
+        "Account notified by or authorizing the requested contract action.",
       type: new GraphQLNonNull(name_type)
     },
     contract: {
@@ -114,10 +114,11 @@ export const get_actions = {
     if (
       !actions ||
       actions.some(
-        ({ action, contract, receivers }) =>
+        ({ action, authorization, contract, receivers }) =>
           action !== args.action ||
           contract !== args.contract ||
-          !receivers.includes(args.account)
+          (!receivers.includes(args.account) &&
+            !authorization.some(({ actor }) => actor === args.account))
       )
     ) {
       throw new GraphQLError(

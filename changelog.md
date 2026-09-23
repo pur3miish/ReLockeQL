@@ -1,5 +1,16 @@
 # RelockeQL changelog
 
+## 5.3.1 - 2026-09-23
+
+### Fixed
+
+- Accept valid Hyperion action-search results when the requested account appears as an action authorizer but is not included in the action receipt receivers.
+- Preserve response-integrity validation by continuing to reject actions that match neither a receipt receiver nor an authorization actor.
+
+### Tests
+
+- Added regression coverage for `core.vaulta::powerup`-shaped results authorized by `relockeblock` and for unrelated-account rejection.
+
 ## 5.3.0 - 2026-08-25
 
 ### Added

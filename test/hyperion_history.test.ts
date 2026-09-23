@@ -23,6 +23,20 @@ const action = {
   trx_id: transactionId
 };
 
+const authorizerOnlyAction = {
+  ...action,
+  act: {
+    account: "core.vaulta",
+    name: "powerup",
+    authorization: [{ actor: "relockeblock", permission: "active" }],
+    data: {
+      payer: "relockeblock",
+      receiver: "relockeblock"
+    }
+  },
+  receipts: [{ receiver: "core.vaulta" }]
+};
+
 describe("Hyperion history", () => {
   const originalFetch = globalThis.fetch;
 
@@ -157,6 +171,52 @@ describe("Hyperion history", () => {
       result.data?.vaulta.get_blockchain.get_actions.actions[0].data,
       action.act.data
     );
+  });
+
+  it("accepts actions matched through authorization when the account was not notified", async () => {
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ actions: [authorizerOnlyAction] }));
+
+    const result = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          {
+            vaulta {
+              get_blockchain {
+                get_actions(
+                  account: "relockeblock"
+                  contract: "core.vaulta"
+                  action: "powerup"
+                ) {
+                  actions {
+                    contract
+                    action
+                    actors
+                    receivers
+                    data
+                  }
+                }
+              }
+            }
+          }
+        `
+      },
+      {
+        chains: {
+          vaulta: "https://rpc.example",
+          hyperion_vaulta: "https://history.example"
+        }
+      }
+    );
+
+    strictEqual(result.errors, undefined);
+    const returnedAction =
+      result.data?.vaulta.get_blockchain.get_actions.actions[0];
+    strictEqual(returnedAction?.action, "powerup");
+    deepStrictEqual(returnedAction?.actors, ["relockeblock"]);
+    strictEqual(returnedAction?.contract, "core.vaulta");
+    deepStrictEqual(returnedAction?.data, authorizerOnlyAction.act.data);
+    deepStrictEqual(returnedAction?.receivers, ["core.vaulta"]);
   });
 
   it("searches the latest actions without a date boundary", async () => {
@@ -650,6 +710,44 @@ describe("Hyperion history", () => {
                   action: "transfer"
                   after: "2026-08-08T10:00:00Z"
                   before: "2026-08-15T10:00:00Z"
+                ) {
+                  actions {
+                    transaction_id
+                  }
+                }
+              }
+            }
+          }
+        `
+      },
+      {
+        chains: {
+          vaulta: "https://rpc.example",
+          hyperion_vaulta: "https://history.example"
+        }
+      }
+    );
+
+    strictEqual(
+      result.errors?.[0].extensions?.code,
+      "HYPERION_MALFORMED_RESPONSE"
+    );
+  });
+
+  it("rejects actions unrelated to the requested account", async () => {
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ actions: [authorizerOnlyAction] }));
+
+    const result = await RelockeQL(
+      {
+        query: /* GraphQL */ `
+          {
+            vaulta {
+              get_blockchain {
+                get_actions(
+                  account: "unrelated"
+                  contract: "core.vaulta"
+                  action: "powerup"
                 ) {
                   actions {
                     transaction_id
